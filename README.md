@@ -21,7 +21,7 @@ This command will analyze your MyAppOrFramework project and generate the module 
 ### Usage options
 
 ```
-$ sourcedocs help
+$ moduleinterface help
 Available commands:
 
 clean      Delete the output folder and quit.
@@ -30,7 +30,7 @@ help       Display general or command-specific help
 version    Display the current version of ModuleInterface
 ```
 
-Typing `moduleinterfacep` help <command> we get a list of all options for that command:
+Typing `moduleinterface help <command>` we get a list of all options for that command:
 
 ```
 Generates the Swift Module Interface.
@@ -59,7 +59,7 @@ Generates the Swift Module Interface.
 
 Usually, for most Xcode projects, no parameters are needed at all. xcodebuild should be able to find the default project and scheme.
 
-If the command fails, try specifying the scheme (-scheme SchemeName) or the workspace. Any arguments passed to sourcedocs after -- will be passed to xcodebuild without modification.
+If the command fails, try specifying the scheme (-scheme SchemeName) or the workspace. Any arguments passed to `moduleinterface` after `--` will be passed to xcodebuild without modification.
 
 `$ moduleinterface generate -- -scheme MyScheme`
 
