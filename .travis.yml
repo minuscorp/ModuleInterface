@@ -20,8 +20,8 @@ jobs:
     dist: trusty
     install:
     - eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
-    - swiftenv install 5.1
-    - swiftenv local 5.1
+    - swiftenv install 5.1 || true
+    - swiftenv local 5.1 || true
     - swift --version
     script:
     - swift test
