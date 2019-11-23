@@ -20,7 +20,6 @@ import Rainbow
 
 /// Type that encapsulates the configuration and evaluation of the `version` subcommand.
 struct VersionCommand: CommandProtocol {
-    typealias Options = NoOptions
     typealias ClientError = ModuleInterface.Error
 
     let verb = "version"
