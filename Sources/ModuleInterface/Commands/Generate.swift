@@ -31,7 +31,7 @@ struct GenerateCommandOptions: OptionsProtocol {
     let xcodeArguments: [String]
 
     static func evaluate(_ mode: CommandMode) -> Result<GenerateCommandOptions, CommandantError<ModuleInterface.Error>> {
-        return curry(self.init)
+        curry(self.init)
             <*> mode <| Option(key: "spm-module",
                                defaultValue: nil,
                                usage: "Generate documentation for Swift Package Manager module.")
@@ -118,8 +118,11 @@ struct GenerateCommand: CommandProtocol {
         fputs("Generating Module Interface...\n".green, stdout)
         let fileName = module.isEmpty ? "Unknown" : module
         let fileExtension = ".swift"
-        let contents = try format("import \(module)\n\n" + documentation.joined(separator: "\n"))
+        let contents = documentation.joined(separator: "\n")
         try contents.write(toFile: path + "/" + fileName + fileExtension, atomically: true, encoding: .utf8)
+        fputs("Fomatting...\n".green, stdout)
+        let formatted = try format(contents)
+        try formatted.write(toFile: path + "/" + fileName + fileExtension, atomically: true, encoding: .utf8)
         fputs("Done 🎉\n".green, stdout)
     }
 
@@ -148,10 +151,13 @@ struct GenerateCommand: CommandProtocol {
         if dictionary.keys.contains(SwiftDocKey.kind.rawValue) {
             if let value: String = dictionary.get(.kind) {
                 if case .enumcase = SwiftDeclarationKind(rawValue: value), let substructure = dictionary[SwiftDocKey.substructure.rawValue] as? [SwiftDoc] {
-                    return substructure.compactMap { (doc: SwiftDoc) -> String? in
-                        doc.get(.name)
+                    return zip(substructure, substructure).compactMap { (decl: SwiftDoc, doc: SwiftDoc) -> String? in
+                        if let declaration: String = decl.get(.parsedDeclaration), let doc: String = doc.get(.documentationComment) {
+                            let formattedDoc = doc.split(separator: "\n").map { "/// \($0)" }.joined(separator: "\n")
+                            return "/// \(formattedDoc)\n\(declaration)"
+                        }
+                        return nil
                     }
-                    .map { "case \($0)" }
                     .joined(separator: "\n")
                 }
             }
@@ -159,6 +165,8 @@ struct GenerateCommand: CommandProtocol {
             guard let element = ModuleElement(dictionary: dictionary) else { return nil }
             guard element.dictionary.accessLevel >= minimumAccessLevel else { return nil }
             guard let declaration = element.declaration else { return nil }
+            // https://github.com/jpsim/SourceKitten/issues/633
+            guard isBalanced(sequence: declaration) else { return nil }
 
             // Step 1: Documentation
             if let docs = element.docs {
@@ -171,7 +179,7 @@ struct GenerateCommand: CommandProtocol {
             doc += "\n"
             // Step 3: Substructure
             if !element.subscructure.isEmpty, element.isTopLevelDeclaration {
-                doc += " {\n\n"
+                doc += " {\n"
                 doc += process(dictionaries: element.subscructure, options: options).joined(separator: "\n")
                 doc += "\n}\n"
             }
@@ -181,5 +189,26 @@ struct GenerateCommand: CommandProtocol {
             return process(dictionaries: substructure, options: options).joined(separator: "\n") + "\n"
         }
         return nil
+    }
+
+    private func isBalanced(sequence: String) -> Bool {
+        var stack = [Character]()
+        for bracket in sequence {
+            switch bracket {
+            case "{", "[", "(":
+                stack.append(bracket)
+            case "}", "]", ")":
+                if stack.isEmpty
+                    || (bracket == "}" && stack.last != "{")
+                    || (bracket == "]" && stack.last != "[")
+                    || (bracket == ")" && stack.last != "(") {
+                    return false
+                }
+                stack.removeLast()
+            default:
+                break
+            }
+        }
+        return stack.isEmpty
     }
 }

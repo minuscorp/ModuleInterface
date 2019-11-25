@@ -7,6 +7,18 @@
 
 Swift tool to generate Module Interfaces for Swift projects.
 
+## What is a Module Interface
+
+A Module Interface is what we commonly get using the CMD+click on an `import` statement in our codebases. SourceKit generates the code on demand. It can be a great tool and source of documentation.
+
+### Examples
+
+* [Commandant](Examples/Commandant.swift)
+* [Mini](Examples/Mini.swift)
+* [SourceKittenFramework](Examples/SourceKittenFramework.swift)
+* [Yams](Examples/Yams.swift)
+* [SwiftLintFramework](Examples/SwiftLintFramework.swift)
+
 ## Usage
 
 To generate the module interface from your project, or library, run the `moduleinterface` command directly from the root your project.
