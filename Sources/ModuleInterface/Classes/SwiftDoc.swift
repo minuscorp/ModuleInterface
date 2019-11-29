@@ -21,7 +21,7 @@ typealias SwiftDoc = [String: Any]
 
 extension Dictionary where Key == String, Value == Any {
     func get<T>(_ key: SwiftDocKey) -> T? {
-        return self[key.rawValue] as? T
+        self[key.rawValue] as? T
     }
 
     var accessLevel: AccessLevel {
