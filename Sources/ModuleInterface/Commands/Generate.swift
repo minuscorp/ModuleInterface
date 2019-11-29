@@ -82,43 +82,56 @@ struct GenerateCommand: CommandProtocol {
         }
     }
 
-    private func parseSPMModule(moduleName: String) throws -> [SwiftDocs] {
-        guard let docs = Module(spmName: moduleName)?.docs else {
+    private func interfaceForModule(_ module: String, compilerArguments: [String]) throws -> [String: SourceKitRepresentable] {
+        try Request.customRequest(request: [
+            "key.request": UID("source.request.editor.open.interface"),
+            "key.name": NSUUID().uuidString,
+            "key.compilerargs": compilerArguments,
+            "key.modulename": "\(module)",
+        ]).send()
+    }
+
+    private func parseSPMModule(moduleName: String) throws -> [String: SourceKitRepresentable] {
+        guard let module = Module(spmName: moduleName) else {
             let message = "Error: Failed to generate documentation for SPM module '\(moduleName)'."
             throw ModuleInterface.Error.default(message)
         }
-        return docs
+        return try interfaceForModule(module.name, compilerArguments: module.compilerArguments)
     }
 
-    private func parseSwiftModule(moduleName: String, args: [String], path: String) throws -> [SwiftDocs] {
-        guard let docs = Module(xcodeBuildArguments: args, name: moduleName, inPath: path)?.docs else {
+    private func parseSwiftModule(moduleName: String, args: [String], path: String) throws -> [String: SourceKitRepresentable] {
+        guard let module = Module(xcodeBuildArguments: args, name: moduleName, inPath: path) else {
             let message = "Error: Failed to generate documentation for module '\(moduleName)'."
             throw ModuleInterface.Error.default(message)
         }
-        return docs
+        return try interfaceForModule(module.name, compilerArguments: module.compilerArguments)
     }
 
-    private func parseXcodeProject(args: [String], inputPath: String) throws -> [SwiftDocs] {
-        guard let docs = Module(xcodeBuildArguments: args, name: nil, inPath: inputPath)?.docs else {
+    private func parseXcodeProject(args: [String], inputPath: String) throws -> [String: SourceKitRepresentable] {
+        guard let module = Module(xcodeBuildArguments: args, name: nil, inPath: inputPath) else {
             throw ModuleInterface.Error.default("Error: Failed to generate documentation.")
         }
-        return docs
+        return try interfaceForModule(module.name, compilerArguments: module.compilerArguments)
     }
 
-    private func generateDocumentation(docs: [SwiftDocs], options: GenerateCommandOptions, module: String) throws {
+    private func generateDocumentation(docs: [String: SourceKitRepresentable], options: GenerateCommandOptions, module: String) throws {
         if options.clean {
             try CleanCommand.removeModuleInterface(path: options.outputFolder, module: module)
         }
-        let output = process(docs: docs, options: options)
+        guard let sourcetext = docs["key.sourcetext"] as? String else {
+            let message = "Unable to parse module named \(module)"
+            throw ModuleInterface.Error.default(message)
+        }
+        let output = sourcetext
         try createDirectory(path: options.outputFolder)
         try write(to: options.outputFolder, module: module, documentation: output)
     }
 
-    private func write(to path: String, module: String, documentation: [String]) throws {
+    private func write(to path: String, module: String, documentation: String) throws {
         fputs("Generating Module Interface...\n".green, stdout)
         let fileName = module.isEmpty ? "Unknown" : module
         let fileExtension = ".swift"
-        let contents = documentation.joined(separator: "\n")
+        let contents = documentation
         try contents.write(toFile: path + "/" + fileName + fileExtension, atomically: true, encoding: .utf8)
         fputs("Fomatting...\n".green, stdout)
         let formatted = try format(contents)

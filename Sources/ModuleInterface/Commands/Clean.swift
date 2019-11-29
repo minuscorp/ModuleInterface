@@ -24,7 +24,7 @@ struct CleanCommandOptions: OptionsProtocol {
     let moduleName: String
 
     static func evaluate(_ mode: CommandMode) -> Result<CleanCommandOptions, CommandantError<ModuleInterface.Error>> {
-        return curry(self.init)
+        curry(self.init)
             <*> mode <| Option(key: "output-folder", defaultValue: ModuleInterface.defaultOutputPath, usage: "Output directory (defaults to \(ModuleInterface.defaultOutputPath)).")
             <*> mode <| Argument(usage: "The module's interface name to clean.")
     }

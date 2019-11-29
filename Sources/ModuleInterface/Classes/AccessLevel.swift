@@ -58,10 +58,10 @@ enum AccessLevel: String, CaseIterable {
 
 extension AccessLevel: Comparable, Equatable {
     static func < (lhs: AccessLevel, rhs: AccessLevel) -> Bool {
-        return lhs.priority < rhs.priority
+        lhs.priority < rhs.priority
     }
 
     static func == (lhs: AccessLevel, rhs: AccessLevel) -> Bool {
-        return lhs.priority == rhs.priority
+        lhs.priority == rhs.priority
     }
 }
