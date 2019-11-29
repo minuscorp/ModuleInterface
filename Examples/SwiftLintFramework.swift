@@ -1,9 +1,1637 @@
+import CommonCrypto
+import Darwin
+import Dispatch
+import Foundation
+import SourceKittenFramework
+import SwiftOnoneSupport
+import Yams
 
+public protocol ASTRule: SwiftLintFramework.Rule {
+    associatedtype KindType: RawRepresentable
 
-public extension Configuration {
-    enum IndentationStyle: Equatable {
-        public static var `default` = spaces(count: 4)
+    func validate(file: SourceKittenFramework.File, kind: Self.KindType, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension ASTRule where Self.KindType.RawValue == String {
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func validate(file: SourceKittenFramework.File, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public enum AccessControlLevel: String, CustomStringConvertible {
+    case `private`
+
+    case `fileprivate`
+
+    case `internal`
+
+    case `public`
+
+    case open
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+}
+
+extension AccessControlLevel: Comparable {
+    /// Returns a Boolean value indicating whether the value of the first
+    /// argument is less than that of the second argument.
+    ///
+    /// This function is the only requirement of the `Comparable` protocol. The
+    /// remainder of the relational operator functions are implemented by the
+    /// standard library for any type that conforms to `Comparable`.
+    ///
+    /// - Parameters:
+    ///   - lhs: A value to compare.
+    ///   - rhs: Another value to compare.
+    public static func < (lhs: SwiftLintFramework.AccessControlLevel, rhs: SwiftLintFramework.AccessControlLevel) -> Bool
+}
+
+public protocol AnalyzerRule: SwiftLintFramework.OptInRule {}
+
+extension AnalyzerRule {
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension AnalyzerRule where Self: SwiftLintFramework.CorrectableRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+/// Type-erased protocol used to check whether a rule is collectable.
+public protocol AnyCollectingRule: SwiftLintFramework.Rule {}
+
+public struct AnyObjectProtocolRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+}
+
+public struct ArrayInitRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct AttributesConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(alwaysOnSameLine: [String] = ["@IBAction", "@NSManaged"], alwaysInNewLine: [String] = [])
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct AttributesRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.AttributesConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public protocol AutomaticTestableRule: SwiftLintFramework.Rule {}
+
+public struct BlockBasedKVORule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct CSVReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct CheckstyleReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct ClassDelegateProtocolRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ClosingBraceRule: SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct ClosureBodyLengthRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityLevelsConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ClosureEndIndentationRule: SwiftLintFramework.Rule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension ClosureEndIndentationRule: SwiftLintFramework.CorrectableRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct ClosureParameterPositionRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ClosureSpacingRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+/// Represents a file that can compute style violations and corrections for a list of rules.
+///
+/// A `CollectedLinter` is only created after a `Linter` has run its collection steps in `Linter.collect(into:)`.
+public struct CollectedLinter {
+    public let file: SourceKittenFramework.File
+
+    public func styleViolations(using storage: SwiftLintFramework.RuleStorage) -> [SwiftLintFramework.StyleViolation]
+
+    public func styleViolationsAndRuleTimes(using storage: SwiftLintFramework.RuleStorage) -> ([SwiftLintFramework.StyleViolation], [(id: String, time: Double)])
+
+    public func correct(using storage: SwiftLintFramework.RuleStorage) -> [SwiftLintFramework.Correction]
+
+    public func format(useTabs: Bool, indentWidth: Int)
+}
+
+public protocol CollectingCorrectableRule: SwiftLintFramework.CollectingRule, SwiftLintFramework.CorrectableRule {
+    func correct(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: Self.FileInfo], compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+
+    func correct(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: Self.FileInfo]) -> [SwiftLintFramework.Correction]
+}
+
+extension CollectingCorrectableRule {
+    public func correct(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: Self.FileInfo], compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+
+    public func correct(file: SourceKittenFramework.File, using storage: SwiftLintFramework.RuleStorage, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+
+    public func correct(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+}
+
+extension CollectingCorrectableRule where Self: SwiftLintFramework.AnalyzerRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+
+    public func correct(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+
+    public func correct(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: Self.FileInfo]) -> [SwiftLintFramework.Correction]
+}
+
+public protocol CollectingRule: SwiftLintFramework.AnyCollectingRule {
+    associatedtype FileInfo
+
+    func collectInfo(for file: SourceKittenFramework.File, compilerArguments: [String]) -> Self.FileInfo
+
+    func collectInfo(for file: SourceKittenFramework.File) -> Self.FileInfo
+
+    func validate(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: Self.FileInfo], compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+
+    func validate(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: Self.FileInfo]) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension CollectingRule {
+    public func collectInfo(for file: SourceKittenFramework.File, into storage: SwiftLintFramework.RuleStorage, compilerArguments: [String])
+
+    public func validate(file: SourceKittenFramework.File, using storage: SwiftLintFramework.RuleStorage, compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+
+    public func collectInfo(for file: SourceKittenFramework.File, compilerArguments: [String]) -> Self.FileInfo
+
+    public func validate(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: Self.FileInfo], compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func validate(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension CollectingRule where Self: SwiftLintFramework.AnalyzerRule {
+    public func collectInfo(for file: SourceKittenFramework.File) -> Self.FileInfo
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func validate(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: Self.FileInfo]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct CollectionAlignmentConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct CollectionAlignmentRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule {
+    public var configuration: SwiftLintFramework.CollectionAlignmentConfiguration
+
+    public init()
+
+    public static var description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ColonConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct ColonRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.ColonConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+extension ColonRule: SwiftLintFramework.ASTRule {
+    /// Only returns dictionary and function calls colon violations
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct CommaRule: SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+}
+
+public struct Command: Equatable {
+    public enum Action: String {
+        case enable
+
+        case disable
     }
+
+    public enum Modifier: String {
+        case previous
+
+        case this
+
+        case next
+    }
+
+    public init(action: SwiftLintFramework.Command.Action, ruleIdentifiers: Set<SwiftLintFramework.RuleIdentifier>, line: Int = 0, character: Int? = nil, modifier: SwiftLintFramework.Command.Modifier? = nil, trailingComment: String? = nil)
+
+    public init?(string: NSString, range: NSRange)
+}
+
+public struct CompilerProtocolInitRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ConditionalReturnsOnNewlineConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct ConditionalReturnsOnNewlineRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.Rule, SwiftLintFramework.OptInRule {
+    public var configuration: SwiftLintFramework.ConditionalReturnsOnNewlineConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct Configuration: Hashable {
+    public enum RulesMode {
+        case `default`(disabled: [String], optIn: [String])
+
+        case whitelisted([String])
+
+        case allEnabled
+    }
+
+    public static let fileName: String
+
+    public let indentation: SwiftLintFramework.Configuration.IndentationStyle
+
+    public let included: [String]
+
+    public let excluded: [String]
+
+    public let reporter: String
+
+    public let warningThreshold: Int?
+
+    public private(set) var rootPath: String? {
+        get
+    }
+
+    public private(set) var configurationPath: String? {
+        get
+    }
+
+    public let cachePath: String?
+
+    /// Hashes the essential components of this value by feeding them into the
+    /// given hasher.
+    ///
+    /// Implement this method to conform to the `Hashable` protocol. The
+    /// components used for hashing must be the same as the components compared
+    /// in your type's `==` operator implementation. Call `hasher.combine(_:)`
+    /// with each of these components.
+    ///
+    /// - Important: Never call `finalize()` on `hasher`. Doing so may become a
+    ///   compile-time error in the future.
+    ///
+    /// - Parameter hasher: The hasher to use when combining the components
+    ///   of this instance.
+    public func hash(into hasher: inout Hasher)
+
+    public let rules: [SwiftLintFramework.Rule]
+
+    public init?(rulesMode: SwiftLintFramework.Configuration.RulesMode = .default(disabled: [], optIn: []), included: [String] = [], excluded: [String] = [], warningThreshold: Int? = nil, reporter: String = XcodeReporter.identifier, ruleList: SwiftLintFramework.RuleList = masterRuleList, configuredRules: [SwiftLintFramework.Rule]? = nil, swiftlintVersion: String? = nil, cachePath: String? = nil, indentation: SwiftLintFramework.Configuration.IndentationStyle = .default, customRulesIdentifiers: [String] = [])
+
+    public init(path: String = Configuration.fileName, rootPath: String? = nil, optional: Bool = true, quiet: Bool = false, enableAllRules: Bool = false, cachePath: String? = nil, customRulesIdentifiers: [String] = [])
+
+    /// Returns a Boolean value indicating whether two values are equal.
+    ///
+    /// Equality is the inverse of inequality. For any values `a` and `b`,
+    /// `a == b` implies that `a != b` is `false`.
+    ///
+    /// - Parameters:
+    ///   - lhs: A value to compare.
+    ///   - rhs: Another value to compare.
+    public static func == (lhs: SwiftLintFramework.Configuration, rhs: SwiftLintFramework.Configuration) -> Bool
+}
+
+extension Configuration {
+    public func withPrecomputedCacheDescription() -> SwiftLintFramework.Configuration
+}
+
+extension Configuration {
+    public enum IndentationStyle: Equatable {
+        case tabs
+
+        case spaces(count: Int)
+
+        public static var `default`: SwiftLintFramework.Configuration.IndentationStyle
+    }
+}
+
+extension Configuration {
+    public func lintableFiles(inPath path: String, forceExclude: Bool) -> [SourceKittenFramework.File]
+}
+
+extension Configuration {
+    public func filterExcludedPaths(fileManager: SwiftLintFramework.LintableFileManager = FileManager.default, in paths: [String]...) -> [String]
+}
+
+extension Configuration {
+    public func configuration(for file: SourceKittenFramework.File) -> SwiftLintFramework.Configuration
+}
+
+extension Configuration {
+    public init?(dict: [String: Any], ruleList: SwiftLintFramework.RuleList = masterRuleList, enableAllRules: Bool = false, cachePath: String? = nil, customRulesIdentifiers: [String] = [])
+}
+
+public enum ConfigurationError: Error {
+    case unknownConfiguration
+}
+
+public protocol ConfigurationProviderRule: SwiftLintFramework.Rule {
+    associatedtype ConfigurationType: SwiftLintFramework.RuleConfiguration
+
+    var configuration: Self.ConfigurationType { get set }
+}
+
+extension ConfigurationProviderRule {
+    public init(configuration: Any) throws
+
+    public func isEqualTo(_ rule: SwiftLintFramework.Rule) -> Bool
+
+    public var configurationDescription: String { get }
+}
+
+extension ConfigurationProviderRule where Self.ConfigurationType == SwiftLintFramework.NameConfiguration {
+    public func severity(forLength length: Int) -> SwiftLintFramework.ViolationSeverity?
+}
+
+public struct ContainsOverFilterCountRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ContainsOverFilterIsEmptyRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ContainsOverFirstNotNilRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ContainsOverRangeNilComparisonRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ControlStatementRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ConvenienceTypeRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public protocol CorrectableRule: SwiftLintFramework.Rule {
+    func correct(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+
+    func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+
+    func correct(file: SourceKittenFramework.File, using storage: SwiftLintFramework.RuleStorage, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+}
+
+extension CorrectableRule {
+    public func correct(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+
+    public func correct(file: SourceKittenFramework.File, using storage: SwiftLintFramework.RuleStorage, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+}
+
+public struct Correction: Equatable {
+    public let ruleDescription: SwiftLintFramework.RuleDescription
+
+    public let location: SwiftLintFramework.Location
+
+    public var consoleDescription: String { get }
+}
+
+public struct CustomRules: SwiftLintFramework.Rule, SwiftLintFramework.ConfigurationProviderRule {
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public var configuration: SwiftLintFramework.CustomRulesConfiguration
+
+    public init()
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct CustomRulesConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public var customRuleConfigurations: [SwiftLintFramework.RegexConfiguration]
+
+    public init()
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct CyclomaticComplexityConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public static let defaultComplexityStatements: Set<SourceKittenFramework.StatementKind>
+
+    public private(set) var length: SwiftLintFramework.SeverityLevelsConfiguration {
+        get
+    }
+
+    public private(set) var complexityStatements: Set<SourceKittenFramework.StatementKind> {
+        get
+    }
+
+    public private(set) var ignoresCaseStatements: Bool
+
+    public init(warning: Int, error: Int?, ignoresCaseStatements: Bool = false)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct CyclomaticComplexityRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.CyclomaticComplexityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DeploymentTargetConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public struct Version: Equatable, Comparable {
+        public let major: Int
+
+        public let minor: Int
+
+        public let patch: Int
+
+        public var stringValue: String { get }
+
+        public init(major: Int, minor: Int = 0, patch: Int = 0)
+
+        public init(rawValue: String) throws
+
+        /// Returns a Boolean value indicating whether the value of the first
+        /// argument is less than that of the second argument.
+        ///
+        /// This function is the only requirement of the `Comparable` protocol. The
+        /// remainder of the relational operator functions are implemented by the
+        /// standard library for any type that conforms to `Comparable`.
+        ///
+        /// - Parameters:
+        ///   - lhs: A value to compare.
+        ///   - rhs: Another value to compare.
+        public static func < (lhs: SwiftLintFramework.DeploymentTargetConfiguration.Version, rhs: SwiftLintFramework.DeploymentTargetConfiguration.Version) -> Bool
+    }
+
+    public var consoleDescription: String { get }
+
+    public init()
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct DeploymentTargetRule: SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.DeploymentTargetConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DiscardedNotificationCenterObserverRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DiscouragedDirectInitConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var severityConfiguration: SwiftLintFramework.SeverityConfiguration
+
+    public var consoleDescription: String { get }
+
+    public var severity: SwiftLintFramework.ViolationSeverity { get }
+
+    public private(set) var discouragedInits: Set<String> {
+        get
+    }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct DiscouragedDirectInitRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.DiscouragedDirectInitConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DiscouragedObjectLiteralRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.ObjectLiteralConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DiscouragedOptionalBooleanRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DiscouragedOptionalCollectionRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DuplicateEnumCasesRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.ASTRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DuplicateImportsRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct DynamicInlineRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct EmojiReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct EmptyCollectionLiteralRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct EmptyCountRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct EmptyEnumArgumentsRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+}
+
+public struct EmptyParametersRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct EmptyParenthesesWithTrailingClosureRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+}
+
+public struct EmptyStringRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct EmptyXCTestMethodRule: SwiftLintFramework.Rule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ExplicitACLRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ExplicitEnumRawValueRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ExplicitInitRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct ExplicitSelfRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AnalyzerRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+}
+
+public struct ExplicitTopLevelACLRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ExplicitTypeInterfaceConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init()
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct ExplicitTypeInterfaceRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.ExplicitTypeInterfaceConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ExtensionAccessModifierRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FallthroughRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FatalErrorMessageRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FileHeaderConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init()
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct FileHeaderRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule {
+    public var configuration: SwiftLintFramework.FileHeaderConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FileLengthRule: SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.FileLengthRuleConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FileLengthRuleConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(warning: Int, error: Int?, ignoreCommentOnlyLines: Bool = false)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct FileNameConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public private(set) var severity: SwiftLintFramework.SeverityConfiguration {
+        get
+    }
+
+    public private(set) var excluded: Set<String> {
+        get
+    }
+
+    public private(set) var prefixPattern: String {
+        get
+    }
+
+    public private(set) var suffixPattern: String {
+        get
+    }
+
+    public private(set) var nestedTypeSeparator: String {
+        get
+    }
+
+    public init(severity: SwiftLintFramework.ViolationSeverity, excluded: [String] = [], prefixPattern: String = "", suffixPattern: String = "\\+.*", nestedTypeSeparator: String = ".")
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct FileNameRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule {
+    public var configuration: SwiftLintFramework.FileNameConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FileTypesOrderConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct FileTypesOrderRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule {
+    public var configuration: SwiftLintFramework.FileTypesOrderConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FirstWhereRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FlatMapOverMapReduceRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ForWhereRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ForceCastRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ForceTryRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ForceUnwrappingRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FunctionBodyLengthRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityLevelsConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FunctionDefaultParameterAtEndRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct FunctionParameterCountConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(warning: Int, error: Int?, ignoresDefaultParameters: Bool = true)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct FunctionParameterCountRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.FunctionParameterCountConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct GenericTypeNameRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.NameConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct HTMLReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct IdenticalOperandsRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct IdentifierNameRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.NameConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ImplicitGetterRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ImplicitReturnRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+}
+
+public struct ImplicitlyUnwrappedOptionalConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public enum ImplicitlyUnwrappedOptionalModeConfiguration: String {
+    case all
+
+    case allExceptIBOutlets
+}
+
+public struct ImplicitlyUnwrappedOptionalRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule {
+    public var configuration: SwiftLintFramework.ImplicitlyUnwrappedOptionalConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct InertDeferRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct IsDisjointRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct JSONReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct JUnitReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct JoinedDefaultParameterRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+}
+
+public struct LargeTupleRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityLevelsConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct LastWhereRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct LeadingWhitespaceRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.SourceKitFreeRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct LegacyCGGeometryFunctionsRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct LegacyConstantRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct LegacyConstructorRule: SwiftLintFramework.ASTRule, SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct LegacyHashingRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct LegacyMultipleRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct LegacyNSGeometryFunctionsRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct LegacyRandomRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static var description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct LetVarWhitespaceRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct LineLengthConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(warning: Int, error: Int?, options: SwiftLintFramework.LineLengthRuleOptions = [])
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct LineLengthRule: SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.LineLengthConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct LineLengthRuleOptions: OptionSet {
+    /// The corresponding value of the raw type.
+    ///
+    /// A new instance initialized with `rawValue` will be equivalent to this
+    /// instance. For example:
+    ///
+    ///     enum PaperSize: String {
+    ///         case A4, A5, Letter, Legal
+    ///     }
+    ///
+    ///     let selectedSize = PaperSize.Letter
+    ///     print(selectedSize.rawValue)
+    ///     // Prints "Letter"
+    ///
+    ///     print(selectedSize == PaperSize(rawValue: selectedSize.rawValue)!)
+    ///     // Prints "true"
+    public let rawValue: Int
+
+    /// Creates a new option set from the given raw value.
+    ///
+    /// This initializer always succeeds, even if the value passed as `rawValue`
+    /// exceeds the static properties declared as part of the option set. This
+    /// example creates an instance of `ShippingOptions` with a raw value beyond
+    /// the highest element, with a bit mask that effectively contains all the
+    /// declared static members.
+    ///
+    ///     let extraOptions = ShippingOptions(rawValue: 255)
+    ///     print(extraOptions.isStrictSuperset(of: .all))
+    ///     // Prints "true"
+    ///
+    /// - Parameter rawValue: The raw value of the option set to create. Each bit
+    ///   of `rawValue` potentially represents an element of the option set,
+    ///   though raw values may include bits that are not defined as distinct
+    ///   values of the `OptionSet` type.
+    public init(rawValue: Int = 0)
+
+    public static let ignoreURLs: SwiftLintFramework.LineLengthRuleOptions
+
+    public static let ignoreFunctionDeclarations: SwiftLintFramework.LineLengthRuleOptions
+
+    public static let ignoreComments: SwiftLintFramework.LineLengthRuleOptions
+
+    public static let ignoreInterpolatedStrings: SwiftLintFramework.LineLengthRuleOptions
+
+    public static let all: SwiftLintFramework.LineLengthRuleOptions
 }
 
 public protocol LintableFileManager {
@@ -12,127 +1640,36 @@ public protocol LintableFileManager {
     func modificationDate(forFileAtPath: String) -> Date?
 }
 
-/// A thread-safe version of Swift's standard print().
-/// - parameter object: Object to print.
-public func queuedPrint<T>(_ object: T)
-
-/// A thread-safe, newline-terminated version of fputs(..., stderr).
-/// - parameter string: String to print.
-public func queuedPrintError(_ string: String)
-
-/// A thread-safe, newline-terminated version of fatalError that doesn't leak
-/// the source path from the compiled binary.
-public func queuedFatalError(_ string: String, file: StaticString = #file, line: UInt = #line) -> Never
-
-public extension SwiftDeclarationAttributeKind {
-    enum ModifierGroup: String, CustomDebugStringConvertible {
-        public var debugDescription: String
-    }
-}
-
-public enum SwiftExpressionKind: String {}
-
-public enum AccessControlLevel: String, CustomStringConvertible {
-    public var description: String
-}
-
-public struct Command: Equatable {
-    public enum Action: String {}
-
-    public enum Modifier: String {}
-
-    public init(action: Action, ruleIdentifiers: Set<RuleIdentifier>, line: Int = 0,
-                character: Int? = nil, modifier: Modifier? = nil, trailingComment: String? = nil)
-
-    public init?(string: NSString, range: NSRange)
-}
-
-public struct Configuration: Hashable {
-    public enum RulesMode {}
-
-    public static let fileName = ".swiftlint.yml"
-
-    public let indentation: IndentationStyle // style to use when indenting
-
-    public let included: [String] // included
-
-    public let excluded: [String] // excluded
-
-    public let reporter: String // reporter (xcode, json, csv, checkstyle)
-
-    public let warningThreshold: Int? // warning threshold
-
-    public private(set) var rootPath: String? // the root path to search for nested configurations
-
-    public private(set) var configurationPath: String? // if successfully loaded from a path
-
-    public let cachePath: String?
-
-    public func hash(into hasher: inout Hasher)
-
-    public let rules: [Rule]
-
-    public init?(rulesMode: RulesMode = .default(disabled: [], optIn: []),
-                 included: [String] = [],
-                 excluded: [String] = [],
-                 warningThreshold: Int? = nil,
-                 reporter: String = XcodeReporter.identifier,
-                 ruleList: RuleList = masterRuleList,
-                 configuredRules: [Rule]? = nil,
-                 swiftlintVersion: String? = nil,
-                 cachePath: String? = nil,
-                 indentation: IndentationStyle = .default,
-                 customRulesIdentifiers: [String] = [])
-
-    public init(path: String = Configuration.fileName, rootPath: String? = nil,
-                optional: Bool = true, quiet: Bool = false, enableAllRules: Bool = false,
-                cachePath: String? = nil, customRulesIdentifiers: [String] = [])
-
-    public static func == (lhs: Configuration, rhs: Configuration) -> Bool
-}
-
-public enum ConfigurationError: Error {}
-
-public struct Correction: Equatable {
-    public let ruleDescription: RuleDescription
-
-    public let location: Location
-
-    public var consoleDescription: String
-}
-
 /// Represents a file that can be linted for style violations and corrections after being collected.
 public struct Linter {
-    public let file: File
+    public let file: SourceKittenFramework.File
 
     public var isCollecting: Bool
 
-    public init(file: File, configuration: Configuration = Configuration()!, cache: LinterCache? = nil,
-                compilerArguments: [String] = [])
+    public init(file: SourceKittenFramework.File, configuration: SwiftLintFramework.Configuration = Configuration()!, cache: SwiftLintFramework.LinterCache? = nil, compilerArguments: [String] = [])
 
     /// Returns a linter capable of checking for violations after running each rule's collection step.
-    public func collect(into storage: RuleStorage) -> CollectedLinter
-}
-
-/// Represents a file that can compute style violations and corrections for a list of rules.
-/// A `CollectedLinter` is only created after a `Linter` has run its collection steps in `Linter.collect(into:)`.
-public struct CollectedLinter {
-    public let file: File
-
-    public func styleViolations(using storage: RuleStorage) -> [StyleViolation]
-
-    public func styleViolationsAndRuleTimes(using storage: RuleStorage)
-        -> ([StyleViolation], [(id: String, time: Double)])
-
-    public func correct(using storage: RuleStorage) -> [Correction]
-
-    public func format(useTabs: Bool, indentWidth: Int)
+    public func collect(into storage: SwiftLintFramework.RuleStorage) -> SwiftLintFramework.CollectedLinter
 }
 
 public final class LinterCache {
-    public init(configuration: Configuration, fileManager: LintableFileManager = FileManager.default)
+    public init(configuration: SwiftLintFramework.Configuration, fileManager: SwiftLintFramework.LintableFileManager = FileManager.default)
 
     public func save() throws
+}
+
+public struct LiteralExpressionEndIdentationRule: SwiftLintFramework.Rule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension LiteralExpressionEndIdentationRule: SwiftLintFramework.CorrectableRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
 }
 
 public struct Location: CustomStringConvertible, Comparable, Codable {
@@ -142,1265 +1679,865 @@ public struct Location: CustomStringConvertible, Comparable, Codable {
 
     public let character: Int?
 
-    public var description: String
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
 
-    public var relativeFile: String?
+    public var relativeFile: String? { get }
 
     public init(file: String?, line: Int? = nil, character: Int? = nil)
 
-    public init(file: File, byteOffset offset: Int)
+    public init(file: SourceKittenFramework.File, byteOffset offset: Int)
 
-    public init(file: File, characterOffset offset: Int)
+    public init(file: SourceKittenFramework.File, characterOffset offset: Int)
 
-    public static func < (lhs: Location, rhs: Location) -> Bool
+    /// Returns a Boolean value indicating whether the value of the first
+    /// argument is less than that of the second argument.
+    ///
+    /// This function is the only requirement of the `Comparable` protocol. The
+    /// remainder of the relational operator functions are implemented by the
+    /// standard library for any type that conforms to `Comparable`.
+    ///
+    /// - Parameters:
+    ///   - lhs: A value to compare.
+    ///   - rhs: Another value to compare.
+    public static func < (lhs: SwiftLintFramework.Location, rhs: SwiftLintFramework.Location) -> Bool
+}
+
+public struct LowerACLThanParentRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct MarkRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct MarkdownReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct MissingDocsRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public init()
+
+    public typealias ConfigurationType = SwiftLintFramework.MissingDocsRuleConfiguration
+
+    public var configuration: SwiftLintFramework.MissingDocsRuleConfiguration
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct MissingDocsRuleConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct ModifierOrderConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(preferredModifierOrder: [SourceKittenFramework.SwiftDeclarationAttributeKind.ModifierGroup] = [])
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct ModifierOrderRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.CorrectableRule {
+    public var configuration: SwiftLintFramework.ModifierOrderConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct MultilineArgumentsBracketsRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct MultilineArgumentsConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public enum FirstArgumentLocation: String {
+        case anyLine
+
+        case sameLine
+
+        case nextLine
+    }
+
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct MultilineArgumentsRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.MultilineArgumentsConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct MultilineFunctionChainsRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct MultilineLiteralBracketsRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct MultilineParametersBracketsRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct MultilineParametersRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct MultipleClosuresWithTrailingClosureRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NSLocalizedStringKeyRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NSLocalizedStringRequireBundleRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NSObjectPreferIsEqualRule: SwiftLintFramework.Rule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NameConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(minLengthWarning: Int, minLengthError: Int, maxLengthWarning: Int, maxLengthError: Int, excluded: [String] = [], allowedSymbols: [String] = [], validatesStartWithLowercase: Bool = true)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct NestingConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(typeLevelWarning: Int, typeLevelError: Int?, statementLevelWarning: Int, statementLevelError: Int?)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct NestingRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.NestingConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NimbleOperatorRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.CorrectableRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct NoExtensionAccessModifierRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NoFallthroughOnlyRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NoGroupingExtensionRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NoSpaceInMethodCallRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+}
+
+public struct NotificationCenterDetachmentRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct NumberSeparatorConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(minimumLength: Int, minimumFractionLength: Int?, excludeRanges: [Range<Double>])
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct NumberSeparatorRule: SwiftLintFramework.OptInRule, SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.NumberSeparatorConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct ObjectLiteralConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct ObjectLiteralRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule {
+    public var configuration: SwiftLintFramework.ObjectLiteralConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct OpeningBraceRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct OperatorFunctionWhitespaceRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct OperatorUsageWhitespaceRule: SwiftLintFramework.OptInRule, SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public protocol OptInRule: SwiftLintFramework.Rule {}
+
+public struct OverriddenSuperCallRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.OverridenSuperCallConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct OverrideInExtensionRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct OverridenSuperCallConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public private(set) var resolvedMethodNames: [String] {
+        get
+    }
+
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+
+    public var severity: SwiftLintFramework.ViolationSeverity { get }
+}
+
+public struct PatternMatchingKeywordsRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct PrefixedConstantRuleConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(onlyPrivateMembers: Bool)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct PrefixedTopLevelConstantRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.PrefixedConstantRuleConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct PrivateActionRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct PrivateOutletRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.PrivateOutletRuleConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct PrivateOutletRuleConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(allowPrivateSet: Bool)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct PrivateOverFilePrivateRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.SubstitutionCorrectableRule {
+    public var configuration: SwiftLintFramework.PrivateOverFilePrivateRuleConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct PrivateOverFilePrivateRuleConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var severityConfiguration: SwiftLintFramework.SeverityConfiguration
+
+    public var validateExtensions: Bool
+
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct PrivateUnitTestConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public let identifier: String
+
+    public var name: String?
+
+    public var message: String
+
+    public var regex: NSRegularExpression!
+
+    public var included: NSRegularExpression?
+
+    public var severityConfiguration: SwiftLintFramework.SeverityConfiguration
+
+    public var severity: SwiftLintFramework.ViolationSeverity { get }
+
+    public var consoleDescription: String { get }
+
+    public init(identifier: String)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct PrivateUnitTestRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.PrivateUnitTestConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ProhibitedInterfaceBuilderRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ProhibitedSuperConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+
+    public var severity: SwiftLintFramework.ViolationSeverity { get }
+}
+
+public struct ProhibitedSuperRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.ProhibitedSuperConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ProtocolPropertyAccessorsOrderRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct QuickDiscouragedCallRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct QuickDiscouragedFocusedTestRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct QuickDiscouragedPendingTestRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ReduceBooleanRule: SwiftLintFramework.Rule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ReduceIntoRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static var description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct RedundantDiscardableLetRule: SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+}
+
+public struct RedundantNilCoalescingRule: SwiftLintFramework.OptInRule, SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+}
+
+public struct RedundantObjcAttributeRule: SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+}
+
+extension RedundantObjcAttributeRule {
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct RedundantOptionalInitializationRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+}
+
+public struct RedundantSetAccessControlRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct RedundantStringEnumValueRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct RedundantTypeAnnotationRule: SwiftLintFramework.OptInRule, SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+}
+
+public struct RedundantVoidReturnRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct RegexConfiguration: SwiftLintFramework.RuleConfiguration, Hashable {
+    public let identifier: String
+
+    public var name: String?
+
+    public var message: String
+
+    public var regex: NSRegularExpression!
+
+    public var included: NSRegularExpression?
+
+    public var excluded: NSRegularExpression?
+
+    public var matchKinds: Set<SourceKittenFramework.SyntaxKind>
+
+    public var severityConfiguration: SwiftLintFramework.SeverityConfiguration
+
+    public var severity: SwiftLintFramework.ViolationSeverity { get }
+
+    public var consoleDescription: String { get }
+
+    public var description: SwiftLintFramework.RuleDescription { get }
+
+    public init(identifier: String)
+
+    public mutating func apply(configuration: Any) throws
+
+    /// Hashes the essential components of this value by feeding them into the
+    /// given hasher.
+    ///
+    /// Implement this method to conform to the `Hashable` protocol. The
+    /// components used for hashing must be the same as the components compared
+    /// in your type's `==` operator implementation. Call `hasher.combine(_:)`
+    /// with each of these components.
+    ///
+    /// - Important: Never call `finalize()` on `hasher`. Doing so may become a
+    ///   compile-time error in the future.
+    ///
+    /// - Parameter hasher: The hasher to use when combining the components
+    ///   of this instance.
+    public func hash(into hasher: inout Hasher)
 }
 
 public struct Region: Equatable {
-    public let start: Location
+    public let start: SwiftLintFramework.Location
 
-    public let end: Location
+    public let end: SwiftLintFramework.Location
 
-    public let disabledRuleIdentifiers: Set<RuleIdentifier>
+    public let disabledRuleIdentifiers: Set<SwiftLintFramework.RuleIdentifier>
 
-    public init(start: Location, end: Location, disabledRuleIdentifiers: Set<RuleIdentifier>)
+    public init(start: SwiftLintFramework.Location, end: SwiftLintFramework.Location, disabledRuleIdentifiers: Set<SwiftLintFramework.RuleIdentifier>)
 
-    public func contains(_ location: Location) -> Bool
+    public func contains(_ location: SwiftLintFramework.Location) -> Bool
 
-    public func isRuleEnabled(_ rule: Rule) -> Bool
+    public func isRuleEnabled(_ rule: SwiftLintFramework.Rule) -> Bool
 
-    public func isRuleDisabled(_ rule: Rule) -> Bool
+    public func isRuleDisabled(_ rule: SwiftLintFramework.Rule) -> Bool
 
-    public func deprecatedAliasesDisabling(rule: Rule) -> Set<String>
-}
-
-public struct RuleDescription: Equatable, Codable {
-    public let identifier: String
-
-    public let name: String
-
-    public let description: String
-
-    public let kind: RuleKind
-
-    public let nonTriggeringExamples: [String]
-
-    public let triggeringExamples: [String]
-
-    public let corrections: [String: String]
-
-    public let deprecatedAliases: Set<String>
-
-    public let minSwiftVersion: SwiftVersion
-
-    public let requiresFileOnDisk: Bool
-
-    public var consoleDescription: String
-
-    public var allIdentifiers: [String]
-
-    public init(identifier: String, name: String, description: String, kind: RuleKind,
-                minSwiftVersion: SwiftVersion = .three,
-                nonTriggeringExamples: [String] = [], triggeringExamples: [String] = [],
-                corrections: [String: String] = [:],
-                deprecatedAliases: Set<String> = [],
-                requiresFileOnDisk: Bool = false)
-
-    public static func == (lhs: RuleDescription, rhs: RuleDescription) -> Bool
-}
-
-public enum RuleIdentifier: Hashable, ExpressibleByStringLiteral {
-    public var stringRepresentation: String
-
-    public init(_ value: String)
-
-    public init(stringLiteral value: String)
-}
-
-public enum RuleKind: String, Codable {}
-
-public enum RuleListError: Error {}
-
-public struct RuleList {
-    public let list: [String: Rule.Type]
-
-    public init(rules: Rule.Type...)
-
-    public init(rules: [Rule.Type])
-}
-
-public struct RuleParameter<T: Equatable>: Equatable {
-    public let severity: ViolationSeverity
-
-    public let value: T
-
-    public init(severity: ViolationSeverity, value: T)
-}
-
-public class RuleStorage {
-    public init()
-}
-
-public struct StyleViolation: CustomStringConvertible, Equatable, Codable {
-    public let ruleDescription: RuleDescription
-
-    public let severity: ViolationSeverity
-
-    public let location: Location
-
-    public let reason: String
-
-    public var description: String
-
-    public init(ruleDescription: RuleDescription, severity: ViolationSeverity = .warning,
-                location: Location, reason: String? = nil)
-}
-
-public struct SwiftVersion: RawRepresentable, Codable {
-    public typealias RawValue = String
-
-    public let rawValue: String
-
-    public init(rawValue: String)
-}
-
-public extension SwiftVersion {
-    static let three = SwiftVersion(rawValue: "3.0.0")
-
-    static let four = SwiftVersion(rawValue: "4.0.0")
-
-    static let fourDotOne = SwiftVersion(rawValue: "4.1.0")
-
-    static let fourDotTwo = SwiftVersion(rawValue: "4.2.0")
-
-    static let five = SwiftVersion(rawValue: "5.0.0")
-
-    static let fiveDotOne = SwiftVersion(rawValue: "5.1.0")
-
-    static let current: SwiftVersion =
-}
-
-public struct Version {
-    public let value: String
-
-    public static let current = Version(value: "0.35.0")
-}
-
-public enum ViolationSeverity: String, Comparable, Codable {
-    public static func < (lhs: ViolationSeverity, rhs: ViolationSeverity) -> Bool
-}
-
-public struct YamlParser {
-    public static func parse(_ yaml: String,
-                             env: [String: String] = ProcessInfo.processInfo.environment) throws -> [String: Any]
-}
-
-public protocol ASTRule: Rule {
-    associatedtype KindType: RawRepresentable
-
-    func validate(file: File, kind: KindType, dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public extension ASTRule where KindType.RawValue == String {
-    func validate(file: File) -> [StyleViolation]
-
-    func validate(file: File, dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
+    public func deprecatedAliasesDisabling(rule: SwiftLintFramework.Rule) -> Set<String>
 }
 
 public protocol Reporter: CustomStringConvertible {
-    static var identifier: String
+    static var identifier: String { get }
 
-    static var isRealtime: Bool
+    static var isRealtime: Bool { get }
 
-    static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public func reporterFrom(identifier: String) -> Reporter.Type
-
-public protocol Rule {
-    static var description: RuleDescription
-
-    var configurationDescription: String
-
-    init() // Rules need to be able to be initialized with default values
-
-    init(configuration: Any) throws
-
-    func validate(file: File, compilerArguments: [String]) -> [StyleViolation]
-
-    func validate(file: File) -> [StyleViolation]
-
-    func isEqualTo(_ rule: Rule) -> Bool
-
-    func collectInfo(for file: File, into storage: RuleStorage, compilerArguments: [String])
-
-    func validate(file: File, using storage: RuleStorage, compilerArguments: [String]) -> [StyleViolation]
-}
-
-public protocol OptInRule: Rule
-
-public protocol AutomaticTestableRule: Rule
-
-public protocol ConfigurationProviderRule: Rule {
-    associatedtype ConfigurationType: RuleConfiguration
-
-    var configuration: ConfigurationType
-}
-
-public protocol CorrectableRule: Rule {
-    func correct(file: File, compilerArguments: [String]) -> [Correction]
-
-    func correct(file: File) -> [Correction]
-
-    func correct(file: File, using storage: RuleStorage, compilerArguments: [String]) -> [Correction]
-}
-
-public extension CorrectableRule {
-    func correct(file: File, compilerArguments: [String]) -> [Correction]
-
-    func correct(file: File, using storage: RuleStorage, compilerArguments: [String]) -> [Correction]
-}
-
-public protocol SubstitutionCorrectableRule: CorrectableRule {
-    func violationRanges(in file: File) -> [NSRange]
-
-    func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public extension SubstitutionCorrectableRule {
-    func correct(file: File) -> [Correction]
-}
-
-public protocol SubstitutionCorrectableASTRule: SubstitutionCorrectableRule, ASTRule {}
-
-public protocol SourceKitFreeRule: Rule
-
-public protocol AnalyzerRule: OptInRule
-
-public extension AnalyzerRule {
-    func validate(file: File) -> [StyleViolation]
-}
-
-public extension AnalyzerRule where Self: CorrectableRule {
-    func correct(file: File) -> [Correction]
-}
-
-/// Type-erased protocol used to check whether a rule is collectable.
-public protocol AnyCollectingRule: Rule
-
-public protocol CollectingRule: AnyCollectingRule {
-    associatedtype FileInfo
-
-    func collectInfo(for file: File, compilerArguments: [String]) -> FileInfo
-
-    func collectInfo(for file: File) -> FileInfo
-
-    func validate(file: File, collectedInfo: [File: FileInfo], compilerArguments: [String]) -> [StyleViolation]
-
-    func validate(file: File, collectedInfo: [File: FileInfo]) -> [StyleViolation]
-}
-
-public extension CollectingRule {
-    func collectInfo(for file: File, into storage: RuleStorage, compilerArguments: [String])
-
-    func validate(file: File, using storage: RuleStorage, compilerArguments: [String]) -> [StyleViolation]
-
-    func collectInfo(for file: File, compilerArguments: [String]) -> FileInfo
-
-    func validate(file: File, collectedInfo: [File: FileInfo], compilerArguments: [String]) -> [StyleViolation]
-
-    func validate(file: File) -> [StyleViolation]
-
-    func validate(file: File, compilerArguments: [String]) -> [StyleViolation]
-}
-
-public extension CollectingRule where Self: AnalyzerRule {
-    func collectInfo(for file: File) -> FileInfo
-
-    func validate(file: File) -> [StyleViolation]
-
-    func validate(file: File, collectedInfo: [File: FileInfo]) -> [StyleViolation]
-}
-
-public protocol CollectingCorrectableRule: CollectingRule, CorrectableRule {
-    func correct(file: File, collectedInfo: [File: FileInfo], compilerArguments: [String]) -> [Correction]
-
-    func correct(file: File, collectedInfo: [File: FileInfo]) -> [Correction]
-}
-
-public extension CollectingCorrectableRule {
-    func correct(file: File, collectedInfo: [File: FileInfo], compilerArguments: [String]) -> [Correction]
-
-    func correct(file: File, using storage: RuleStorage, compilerArguments: [String]) -> [Correction]
-
-    func correct(file: File) -> [Correction]
-
-    func correct(file: File, compilerArguments: [String]) -> [Correction]
-}
-
-public extension CollectingCorrectableRule where Self: AnalyzerRule {
-    func correct(file: File) -> [Correction]
-
-    func correct(file: File, compilerArguments: [String]) -> [Correction]
-
-    func correct(file: File, collectedInfo: [File: FileInfo]) -> [Correction]
-}
-
-public extension ConfigurationProviderRule {
-    init(configuration: Any) throws
-
-    func isEqualTo(_ rule: Rule) -> Bool
-
-    var configurationDescription: String
-}
-
-public extension Array where Element == Rule {
-    static func == (lhs: Array, rhs: Array) -> Bool
-}
-
-public protocol RuleConfiguration {
-    var consoleDescription: String
-
-    mutating func apply(configuration: Any) throws
-
-    func isEqualTo(_ ruleConfiguration: RuleConfiguration) -> Bool
-}
-
-public extension RuleConfiguration where Self: Equatable {
-    func isEqualTo(_ ruleConfiguration: RuleConfiguration) -> Bool
-}
-
-public struct CSVReporter: Reporter {
-    public static let identifier = "csv"
-
-    public static let isRealtime = false
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct CheckstyleReporter: Reporter {
-    public static let identifier = "checkstyle"
-
-    public static let isRealtime = false
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct EmojiReporter: Reporter {
-    public static let identifier = "emoji"
-
-    public static let isRealtime = false
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct HTMLReporter: Reporter {
-    public static let identifier = "html"
-
-    public static let isRealtime = false
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct JSONReporter: Reporter {
-    public static let identifier = "json"
-
-    public static let isRealtime = false
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct JUnitReporter: Reporter {
-    public static let identifier = "junit"
-
-    public static let isRealtime = false
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct MarkdownReporter: Reporter {
-    public static let identifier = "markdown"
-
-    public static let isRealtime = false
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct SonarQubeReporter: Reporter {
-    public static let identifier = "sonarqube"
-
-    public static let isRealtime = false
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct XcodeReporter: Reporter {
-    public static let identifier = "xcode"
-
-    public static let isRealtime = true
-
-    public var description: String
-
-    public static func generateReport(_ violations: [StyleViolation]) -> String
-}
-
-public struct BlockBasedKVORule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ConvenienceTypeRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct DiscouragedObjectLiteralRule: ASTRule, OptInRule, ConfigurationProviderRule {
-    public var configuration = ObjectLiteralConfiguration()
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct DiscouragedOptionalBooleanRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct DiscouragedOptionalCollectionRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct DuplicateImportsRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ExplicitACLRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ExplicitEnumRawValueRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ExplicitInitRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule, OptInRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func violationRanges(in file: File, kind: SwiftExpressionKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct ExplicitTopLevelACLRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ExplicitTypeInterfaceRule: OptInRule, ConfigurationProviderRule {
-    public var configuration = ExplicitTypeInterfaceConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ExtensionAccessModifierRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct FallthroughRule: ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct FatalErrorMessageRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct FileNameRule: ConfigurationProviderRule, OptInRule {
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ForWhereRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ForceCastRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.error)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ForceTryRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.error)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ForceUnwrappingRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct FunctionDefaultParameterAtEndRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct GenericTypeNameRule: ASTRule, ConfigurationProviderRule {
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ImplicitlyUnwrappedOptionalRule: ASTRule, ConfigurationProviderRule, OptInRule {
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct IsDisjointRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct JoinedDefaultParameterRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule, OptInRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File,
-                                kind: SwiftExpressionKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-}
-
-public struct LegacyCGGeometryFunctionsRule: CorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct LegacyConstantRule: CorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct LegacyConstructorRule: ASTRule, CorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct LegacyHashingRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct LegacyMultipleRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct LegacyNSGeometryFunctionsRule: CorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct LegacyRandomRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(
-        file: File,
-        kind: SwiftExpressionKind,
-        dictionary: [String: SourceKitRepresentable]
-    ) -> [StyleViolation]
-}
-
-public struct NimbleOperatorRule: ConfigurationProviderRule, OptInRule, CorrectableRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct NoExtensionAccessModifierRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.error)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct NoFallthroughOnlyRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct NoGroupingExtensionRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ObjectLiteralRule: ASTRule, ConfigurationProviderRule, OptInRule {
-    public var configuration = ObjectLiteralConfiguration()
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct PatternMatchingKeywordsRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct PrivateOverFilePrivateRule: ConfigurationProviderRule, SubstitutionCorrectableRule {
-    public var configuration = PrivateOverFilePrivateRuleConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func violationRanges(in file: File) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct RedundantNilCoalescingRule: OptInRule, SubstitutionCorrectableRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File) -> [NSRange]
-}
-
-public struct RedundantObjcAttributeRule: SubstitutionCorrectableRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func violationRanges(in file: File) -> [NSRange]
-}
-
-public extension RedundantObjcAttributeRule {
-    func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct RedundantOptionalInitializationRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File, kind: SwiftDeclarationKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-}
-
-public struct RedundantSetAccessControlRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct RedundantStringEnumValueRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct RedundantTypeAnnotationRule: OptInRule, SubstitutionCorrectableRule,
-    ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File) -> [NSRange]
-}
-
-public struct RedundantVoidReturnRule: ConfigurationProviderRule, SubstitutionCorrectableASTRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func violationRanges(in file: File, kind: SwiftDeclarationKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct StaticOperatorRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct StrictFilePrivateRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct SyntacticSugarRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ToggleBoolRule: ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct TrailingSemicolonRule: SubstitutionCorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func violationRanges(in file: File) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct TypeNameRule: ASTRule, ConfigurationProviderRule {
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct UnavailableFunctionRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct UnneededBreakInSwitchRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct UntypedErrorInCatchRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct UnusedEnumeratedRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct XCTFailMessageRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct XCTSpecificMatcherRule: ASTRule, OptInRule, ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct AnyObjectProtocolRule: SubstitutionCorrectableASTRule, OptInRule,
-    ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File,
-                                kind: SwiftDeclarationKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-}
-
-public struct ArrayInitRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ClassDelegateProtocolRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct CompilerProtocolInitRule: ASTRule, ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct DeploymentTargetRule: ConfigurationProviderRule {
-    public var configuration = DeploymentTargetConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct DiscardedNotificationCenterObserverRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct DiscouragedDirectInitRule: ASTRule, ConfigurationProviderRule {
-    public var configuration = DiscouragedDirectInitConfiguration()
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct DuplicateEnumCasesRule: ConfigurationProviderRule, ASTRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.error)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct DynamicInlineRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.error)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct EmptyXCTestMethodRule: Rule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct IdenticalOperandsRule: ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct InertDeferRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct LowerACLThanParentRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct MarkRule: CorrectableRule, ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct MissingDocsRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public init()
-
-    public typealias ConfigurationType = MissingDocsRuleConfiguration
-
-    public var configuration: MissingDocsRuleConfiguration
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct NSLocalizedStringKeyRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct NSLocalizedStringRequireBundleRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct NSObjectPreferIsEqualRule: Rule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct NotificationCenterDetachmentRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct OverriddenSuperCallRule: ConfigurationProviderRule, ASTRule, OptInRule, AutomaticTestableRule {
-    public var configuration = OverridenSuperCallConfiguration()
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct OverrideInExtensionRule: ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct PrivateActionRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct PrivateOutletRule: ASTRule, OptInRule, ConfigurationProviderRule {
-    public var configuration = PrivateOutletRuleConfiguration(allowPrivateSet: false)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct PrivateUnitTestRule: ASTRule, ConfigurationProviderRule, CacheDescriptionProvider, AutomaticTestableRule {
-    public var configuration: PrivateUnitTestConfiguration =
-
-        public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ProhibitedInterfaceBuilderRule: ConfigurationProviderRule, ASTRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ProhibitedSuperRule: ConfigurationProviderRule, ASTRule, OptInRule, AutomaticTestableRule {
-    public var configuration = ProhibitedSuperConfiguration()
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct QuickDiscouragedCallRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct QuickDiscouragedFocusedTestRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct QuickDiscouragedPendingTestRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
+    static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
 }
 
 /// Rule to require all classes to have a deinit method
+///
 /// An example of when this is useful is if the project does allocation tracking
 /// of objects and the deinit should print a message or remove its instance from a
 /// list of allocations. Even having an empty deinit method is useful to provide
 /// a place to put a breakpoint when chasing down leaks.
-public struct RequiredDeinitRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
+public struct RequiredDeinitRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public static let description: SwiftLintFramework.RuleDescription
 
     public init()
 
-    public func validate(file: File,
-                         kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
 }
 
 /// Allows for Enums that conform to a protocol to require that a specific case be present.
+///
 /// This is primarily for result enums where a specific case is common but cannot be inherited due to cases not being
 /// inheritable.
+///
 /// For example: A result enum is used to define all of the responses a client must handle from a specific service call
 /// in an API.
+///
 /// ````
 /// enum MyServiceCallResponse: String {
 ///     case unauthorized
 ///     case unknownError
 ///     case accountCreated
 /// }
+///
 /// // An exhaustive switch can be used so any new scenarios added cause compile errors.
 /// switch response {
 ///    case unauthorized:
@@ -1411,17 +2548,22 @@ public struct RequiredDeinitRule: ASTRule, OptInRule, ConfigurationProviderRule,
 ///        ...
 /// }
 /// ````
+///
 /// If cases could be inherited you could put all of the common ones in an enum and then inherit from that enum:
+///
 /// ````
 /// enum MyServiceResponse: String {
 ///     case unauthorized
 ///     case unknownError
 /// }
+///
 /// enum MyServiceCallResponse: MyServiceResponse {
 ///     case accountCreated
 /// }
 /// ````
+///
 /// Which would result in MyServiceCallResponse having all of the cases when compiled:
+///
 /// ```
 /// enum MyServiceCallResponse: MyServiceResponse {
 ///     case unauthorized
@@ -1429,7 +2571,9 @@ public struct RequiredDeinitRule: ASTRule, OptInRule, ConfigurationProviderRule,
 ///     case accountCreated
 /// }
 /// ```
+///
 /// Since that cannot be done this rule allows you to define cases that should be present if conforming to a protocol.
+///
 /// `.swiftlint.yml`
 /// ````
 /// required_enum_case:
@@ -1437,1358 +2581,1175 @@ public struct RequiredDeinitRule: ASTRule, OptInRule, ConfigurationProviderRule,
 ///     unauthorized: error
 ///     unknownError: error
 /// ````
+///
 /// ````
 /// protocol MyServiceResponse {}
+///
 /// // This will now have errors because `unauthorized` and `unknownError` are not present.
 /// enum MyServiceCallResponse: String, MyServiceResponse {
 ///     case accountCreated
 /// }
 /// ````
-public struct RequiredEnumCaseRule: ASTRule, OptInRule, ConfigurationProviderRule {
-    public var configuration = RequiredEnumCaseRuleConfiguration()
+public struct RequiredEnumCaseRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.RequiredEnumCaseRuleConfiguration
 
     public init()
 
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
 }
 
-public struct StrongIBOutletRule: ConfigurationProviderRule, ASTRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
+public struct RequiredEnumCaseRuleConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
 
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
+    public mutating func apply(configuration: Any) throws
 }
 
-public struct SuperfluousDisableCommandRule: ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
+public struct ReturnArrowWhitespaceRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
 
     public init()
 
-    public func validate(file: File) -> [StyleViolation]
+    public static let description: SwiftLintFramework.RuleDescription
 
-    public func reason(for rule: Rule.Type) -> String
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public protocol Rule {
+    static var description: SwiftLintFramework.RuleDescription { get }
+
+    var configurationDescription: String { get }
+
+    init()
+
+    init(configuration: Any) throws
+
+    func validate(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+
+    func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    func isEqualTo(_ rule: SwiftLintFramework.Rule) -> Bool
+
+    func collectInfo(for file: SourceKittenFramework.File, into storage: SwiftLintFramework.RuleStorage, compilerArguments: [String])
+
+    func validate(file: SourceKittenFramework.File, using storage: SwiftLintFramework.RuleStorage, compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension Rule {
+    public func validate(file: SourceKittenFramework.File, using storage: SwiftLintFramework.RuleStorage, compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+
+    public func validate(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+
+    public func isEqualTo(_ rule: SwiftLintFramework.Rule) -> Bool
+
+    public func collectInfo(for file: SourceKittenFramework.File, into storage: SwiftLintFramework.RuleStorage, compilerArguments: [String])
+}
+
+public protocol RuleConfiguration {
+    var consoleDescription: String { get }
+
+    mutating func apply(configuration: Any) throws
+
+    func isEqualTo(_ ruleConfiguration: SwiftLintFramework.RuleConfiguration) -> Bool
+}
+
+extension RuleConfiguration where Self: Equatable {
+    public func isEqualTo(_ ruleConfiguration: SwiftLintFramework.RuleConfiguration) -> Bool
+}
+
+public struct RuleDescription: Equatable, Codable {
+    public let identifier: String
+
+    public let name: String
+
+    public let description: String
+
+    public let kind: SwiftLintFramework.RuleKind
+
+    public let nonTriggeringExamples: [String]
+
+    public let triggeringExamples: [String]
+
+    public let corrections: [String: String]
+
+    public let deprecatedAliases: Set<String>
+
+    public let minSwiftVersion: SwiftLintFramework.SwiftVersion
+
+    public let requiresFileOnDisk: Bool
+
+    public var consoleDescription: String { get }
+
+    public var allIdentifiers: [String] { get }
+
+    public init(identifier: String, name: String, description: String, kind: SwiftLintFramework.RuleKind, minSwiftVersion: SwiftLintFramework.SwiftVersion = .three, nonTriggeringExamples: [String] = [], triggeringExamples: [String] = [], corrections: [String: String] = [:], deprecatedAliases: Set<String> = [], requiresFileOnDisk: Bool = false)
+
+    /// Returns a Boolean value indicating whether two values are equal.
+    ///
+    /// Equality is the inverse of inequality. For any values `a` and `b`,
+    /// `a == b` implies that `a != b` is `false`.
+    ///
+    /// - Parameters:
+    ///   - lhs: A value to compare.
+    ///   - rhs: Another value to compare.
+    public static func == (lhs: SwiftLintFramework.RuleDescription, rhs: SwiftLintFramework.RuleDescription) -> Bool
+}
+
+public enum RuleIdentifier: Hashable, ExpressibleByStringLiteral {
+    case all
+
+    case single(identifier: String)
+
+    public var stringRepresentation: String { get }
+
+    public init(_ value: String)
+
+    /// Creates an instance initialized to the given string value.
+    ///
+    /// - Parameter value: The value of the new instance.
+    public init(stringLiteral value: String)
+}
+
+public enum RuleKind: String, Codable {
+    case lint
+
+    case idiomatic
+
+    case style
+
+    case metrics
+
+    case performance
+}
+
+public struct RuleList {
+    public let list: [String: SwiftLintFramework.Rule.Type]
+
+    public init(rules: SwiftLintFramework.Rule.Type...)
+
+    public init(rules: [SwiftLintFramework.Rule.Type])
+}
+
+extension RuleList {
+    public func generateDocumentation() -> String
+}
+
+public enum RuleListError: Error {
+    case duplicatedConfigurations(rule: SwiftLintFramework.Rule.Type)
+}
+
+public struct RuleParameter<T>: Equatable where T: Equatable {
+    public let severity: SwiftLintFramework.ViolationSeverity
+
+    public let value: T
+
+    public init(severity: SwiftLintFramework.ViolationSeverity, value: T)
+}
+
+public class RuleStorage {
+    public init()
+}
+
+public struct SeverityConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(_ severity: SwiftLintFramework.ViolationSeverity)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct SeverityLevelsConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public var shortConsoleDescription: String { get }
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public struct ShorthandOperatorRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct SingleTestClassRule: SwiftLintFramework.Rule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public init()
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct SonarQubeReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct SortedFirstLastRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct SortedImportsRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public protocol SourceKitFreeRule: SwiftLintFramework.Rule {}
+
+public struct StatementConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(statementMode: SwiftLintFramework.StatementModeConfiguration, severity: SwiftLintFramework.SeverityConfiguration)
+
+    public mutating func apply(configuration: Any) throws
+}
+
+public enum StatementModeConfiguration: String {
+    case `default`
+
+    case uncuddledElse
+}
+
+public struct StatementPositionRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.StatementConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public static let uncuddledDescription: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct StaticOperatorRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct StrictFilePrivateRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct StrongIBOutletRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct StyleViolation: CustomStringConvertible, Equatable, Codable {
+    public let ruleDescription: SwiftLintFramework.RuleDescription
+
+    public let severity: SwiftLintFramework.ViolationSeverity
+
+    public let location: SwiftLintFramework.Location
+
+    public let reason: String
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public init(ruleDescription: SwiftLintFramework.RuleDescription, severity: SwiftLintFramework.ViolationSeverity = .warning, location: SwiftLintFramework.Location, reason: String? = nil)
+}
+
+public protocol SubstitutionCorrectableASTRule: SwiftLintFramework.ASTRule, SwiftLintFramework.SubstitutionCorrectableRule {
+    func violationRanges(in file: SourceKittenFramework.File, kind: Self.KindType, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+}
+
+extension SubstitutionCorrectableASTRule where Self.KindType.RawValue == String {
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+}
+
+public protocol SubstitutionCorrectableRule: SwiftLintFramework.CorrectableRule {
+    func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+
+    func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+extension SubstitutionCorrectableRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct SuperfluousDisableCommandRule: SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func reason(for rule: SwiftLintFramework.Rule.Type) -> String
 
     public func reason(for rule: String) -> String
 
     public func reason(forNonExistentRule rule: String) -> String
 }
 
-public extension SyntaxKind {
-    /// Returns if the syntax kind is comment-like.
-    var isCommentLike: Bool
+public enum SwiftExpressionKind: String {
+    case call
+
+    case argument
+
+    case array
+
+    case dictionary
+
+    case objectLiteral
+
+    case closure
+
+    case tuple
 }
 
-public struct TodoRule: ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
+public struct SwiftVersion: RawRepresentable, Codable {
+    /// The raw type that can be used to represent all values of the conforming
+    /// type.
+    ///
+    /// Every distinct value of the conforming type has a corresponding unique
+    /// value of the `RawValue` type, but there may be values of the `RawValue`
+    /// type that don't have a corresponding value of the conforming type.
+    public typealias RawValue = String
 
-    public init()
+    /// The corresponding value of the raw type.
+    ///
+    /// A new instance initialized with `rawValue` will be equivalent to this
+    /// instance. For example:
+    ///
+    ///     enum PaperSize: String {
+    ///         case A4, A5, Letter, Legal
+    ///     }
+    ///
+    ///     let selectedSize = PaperSize.Letter
+    ///     print(selectedSize.rawValue)
+    ///     // Prints "Letter"
+    ///
+    ///     print(selectedSize == PaperSize(rawValue: selectedSize.rawValue)!)
+    ///     // Prints "true"
+    public let rawValue: String
 
-    public func validate(file: File) -> [StyleViolation]
+    /// Creates a new instance with the specified raw value.
+    ///
+    /// If there is no value of the type that corresponds with the specified raw
+    /// value, this initializer returns `nil`. For example:
+    ///
+    ///     enum PaperSize: String {
+    ///         case A4, A5, Letter, Legal
+    ///     }
+    ///
+    ///     print(PaperSize(rawValue: "Legal"))
+    ///     // Prints "Optional("PaperSize.Legal")"
+    ///
+    ///     print(PaperSize(rawValue: "Tabloid"))
+    ///     // Prints "nil"
+    ///
+    /// - Parameter rawValue: The raw value to use for the new instance.
+    public init(rawValue: String)
 }
 
-public struct UnownedVariableCaptureRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
+extension SwiftVersion: Comparable {
+    /// Returns a Boolean value indicating whether the value of the first
+    /// argument is less than that of the second argument.
+    ///
+    /// This function is the only requirement of the `Comparable` protocol. The
+    /// remainder of the relational operator functions are implemented by the
+    /// standard library for any type that conforms to `Comparable`.
+    ///
+    /// - Parameters:
+    ///   - lhs: A value to compare.
+    ///   - rhs: Another value to compare.
+    public static func < (lhs: SwiftLintFramework.SwiftVersion, rhs: SwiftLintFramework.SwiftVersion) -> Bool
 }
 
-public struct UnusedCaptureListRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
+extension SwiftVersion {
+    public static let three: SwiftLintFramework.SwiftVersion
 
-    public init()
+    public static let four: SwiftLintFramework.SwiftVersion
 
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
+    public static let fourDotOne: SwiftLintFramework.SwiftVersion
+
+    public static let fourDotTwo: SwiftLintFramework.SwiftVersion
+
+    public static let five: SwiftLintFramework.SwiftVersion
+
+    public static let fiveDotOne: SwiftLintFramework.SwiftVersion
+
+    public static let current: SwiftLintFramework.SwiftVersion
 }
 
-public struct UnusedClosureParameterRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func violationRanges(in file: File, kind: SwiftExpressionKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct UnusedControlFlowLabelRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File, kind: StatementKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-}
-
-public struct UnusedDeclarationRule: AutomaticTestableRule, ConfigurationProviderRule, AnalyzerRule, CollectingRule {
-    public struct FileUSRs {}
-
-    public typealias FileInfo = FileUSRs
-
-    public var configuration = UnusedDeclarationConfiguration(severity: .error, includePublicAndOpen: false)
-
-    public init()
-
-    public func collectInfo(for file: File, compilerArguments: [String]) -> UnusedDeclarationRule.FileUSRs
-
-    public func validate(file: File, collectedInfo: [File: UnusedDeclarationRule.FileUSRs],
-                         compilerArguments: [String]) -> [StyleViolation]
-}
-
-public struct UnusedImportRule: CorrectableRule, ConfigurationProviderRule, AnalyzerRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, compilerArguments: [String]) -> [StyleViolation]
-
-    public func correct(file: File, compilerArguments: [String]) -> [Correction]
-}
-
-public struct UnusedSetterValueRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ValidIBInspectableRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct WeakDelegateRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct YodaConditionRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ClosureBodyLengthRule: OptInRule, ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityLevelsConfiguration(warning: 20, error: 100)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct CyclomaticComplexityRule: ASTRule, ConfigurationProviderRule {
-    public var configuration = CyclomaticComplexityConfiguration(warning: 10, error: 20)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct FileLengthRule: ConfigurationProviderRule {
-    public var configuration = FileLengthRuleConfiguration(warning: 400, error: 1000)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct FunctionBodyLengthRule: ASTRule, ConfigurationProviderRule {
-    public var configuration = SeverityLevelsConfiguration(warning: 40, error: 100)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct FunctionParameterCountRule: ASTRule, ConfigurationProviderRule {
-    public var configuration = FunctionParameterCountConfiguration(warning: 5, error: 8)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct LargeTupleRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityLevelsConfiguration(warning: 2, error: 3)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct LineLengthRule: ConfigurationProviderRule {
-    public var configuration = LineLengthConfiguration(warning: 120, error: 200)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct NestingRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct TypeBodyLengthRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityLevelsConfiguration(warning: 200, error: 350)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ContainsOverFilterCountRule: CallPairRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ContainsOverFilterIsEmptyRule: CallPairRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ContainsOverFirstNotNilRule: CallPairRule, OptInRule, ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ContainsOverRangeNilComparisonRule: CallPairRule, OptInRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct EmptyCollectionLiteralRule: ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct EmptyCountRule: ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.error)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct EmptyStringRule: ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct FirstWhereRule: CallPairRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct FlatMapOverMapReduceRule: CallPairRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct LastWhereRule: CallPairRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ReduceBooleanRule: Rule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ReduceIntoRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct SortedFirstLastRule: CallPairRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct AttributesConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(alwaysOnSameLine: [String] = ["@IBAction", "@NSManaged"],
-                alwaysInNewLine: [String] = [])
+public struct SwitchCaseAlignmentConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
 
     public mutating func apply(configuration: Any) throws
 }
 
-public struct CollectionAlignmentConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct ColonConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct ConditionalReturnsOnNewlineConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct CyclomaticComplexityConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public private(set) var length: SeverityLevelsConfiguration
-
-    public private(set) var complexityStatements: Set<StatementKind>
-
-    public private(set) var ignoresCaseStatements: Bool
-
-    public init(warning: Int, error: Int?, ignoresCaseStatements: Bool = false)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct DeploymentTargetConfiguration: RuleConfiguration, Equatable {
-    public struct Version: Equatable, Comparable {
-        public let major: Int
-
-        public let minor: Int
-
-        public let patch: Int
-
-        public var stringValue: String
-
-        public init(major: Int, minor: Int = 0, patch: Int = 0)
-
-        public init(rawValue: String) throws
-
-        public static func < (lhs: Version, rhs: Version) -> Bool
-    }
-
-    public var consoleDescription: String
+public struct SwitchCaseAlignmentRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SwitchCaseAlignmentConfiguration
 
     public init()
 
-    public mutating func apply(configuration: Any) throws
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
 }
 
-public struct DiscouragedDirectInitConfiguration: RuleConfiguration, Equatable {
-    public var severityConfiguration = SeverityConfiguration(.warning)
-
-    public var consoleDescription: String
-
-    public var severity: ViolationSeverity
-
-    public private(set) var discouragedInits: Set<String>
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct ExplicitTypeInterfaceConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct SwitchCaseOnNewlineRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
 
     public init()
 
-    public mutating func apply(configuration: Any) throws
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
 }
 
-public struct FileHeaderConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct SyntacticSugarRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
 
     public init()
 
-    public mutating func apply(configuration: Any) throws
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
 }
 
-public struct FileLengthRuleConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct TodoRule: SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
 
-    public init(warning: Int, error: Int?, ignoreCommentOnlyLines: Bool = false)
+    public init()
 
-    public mutating func apply(configuration: Any) throws
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
 }
 
-public struct FileNameConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct ToggleBoolRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
 
-    public private(set) var severity: SeverityConfiguration
+    public init()
 
-    public private(set) var excluded: Set<String>
+    public static var description: SwiftLintFramework.RuleDescription
 
-    public private(set) var prefixPattern: String
-
-    public private(set) var suffixPattern: String
-
-    public private(set) var nestedTypeSeparator: String
-
-    public init(severity: ViolationSeverity, excluded: [String] = [],
-                prefixPattern: String = "", suffixPattern: String = "\\+.*", nestedTypeSeparator: String = ".")
-
-    public mutating func apply(configuration: Any) throws
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
 }
 
-public struct FileTypesOrderConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct FunctionParameterCountConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(warning: Int, error: Int?, ignoresDefaultParameters: Bool = true)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public enum ImplicitlyUnwrappedOptionalModeConfiguration: String {}
-
-public struct ImplicitlyUnwrappedOptionalConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct LineLengthRuleOptions: OptionSet {
-    public let rawValue: Int
-
-    public init(rawValue: Int = 0)
-
-    public static let ignoreURLs = LineLengthRuleOptions(rawValue: 1 << 0)
-
-    public static let ignoreFunctionDeclarations = LineLengthRuleOptions(rawValue: 1 << 1)
-
-    public static let ignoreComments = LineLengthRuleOptions(rawValue: 1 << 2)
-
-    public static let ignoreInterpolatedStrings = LineLengthRuleOptions(rawValue: 1 << 3)
-}
-
-public struct LineLengthConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(warning: Int, error: Int?, options: LineLengthRuleOptions = [])
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct MissingDocsRuleConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct ModifierOrderConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(preferredModifierOrder: [SwiftDeclarationAttributeKind.ModifierGroup] = [])
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct MultilineArgumentsConfiguration: RuleConfiguration, Equatable {
-    public enum FirstArgumentLocation: String {}
-
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct NameConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(minLengthWarning: Int,
-                minLengthError: Int,
-                maxLengthWarning: Int,
-                maxLengthError: Int,
-                excluded: [String] = [],
-                allowedSymbols: [String] = [],
-                validatesStartWithLowercase: Bool = true)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public extension ConfigurationProviderRule where ConfigurationType == NameConfiguration {
-    func severity(forLength length: Int) -> ViolationSeverity?
-}
-
-public struct NestingConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(typeLevelWarning: Int,
-                typeLevelError: Int?,
-                statementLevelWarning: Int,
-                statementLevelError: Int?)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct NumberSeparatorConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(minimumLength: Int, minimumFractionLength: Int?, excludeRanges: [Range<Double>])
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct ObjectLiteralConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct OverridenSuperCallConfiguration: RuleConfiguration, Equatable {
-    public private(set) var resolvedMethodNames: [String]
-
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-
-    public var severity: ViolationSeverity
-}
-
-public struct PrefixedConstantRuleConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(onlyPrivateMembers: Bool)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct PrivateOutletRuleConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(allowPrivateSet: Bool)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct PrivateOverFilePrivateRuleConfiguration: RuleConfiguration, Equatable {
-    public var severityConfiguration = SeverityConfiguration(.warning)
-
-    public var validateExtensions = false
-
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct PrivateUnitTestConfiguration: RuleConfiguration, Equatable, CacheDescriptionProvider {
-    public let identifier: String
-
-    public var name: String?
-
-    public var message = "Regex matched."
-
-    public var regex: NSRegularExpression!
-
-    public var included: NSRegularExpression?
-
-    public var severityConfiguration = SeverityConfiguration(.warning)
-
-    public var severity: ViolationSeverity
-
-    public var consoleDescription: String
-
-    public init(identifier: String)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct ProhibitedSuperConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-
-    public var severity: ViolationSeverity
-}
-
-public struct RegexConfiguration: RuleConfiguration, Hashable, CacheDescriptionProvider {
-    public let identifier: String
-
-    public var name: String?
-
-    public var message = "Regex matched."
-
-    public var regex: NSRegularExpression!
-
-    public var included: NSRegularExpression?
-
-    public var excluded: NSRegularExpression?
-
-    public var matchKinds = SyntaxKind.allKinds
-
-    public var severityConfiguration = SeverityConfiguration(.warning)
-
-    public var severity: ViolationSeverity
-
-    public var consoleDescription: String
-
-    public var description: RuleDescription
-
-    public init(identifier: String)
-
-    public mutating func apply(configuration: Any) throws
-
-    public func hash(into hasher: inout Hasher)
-}
-
-public struct RequiredEnumCaseRuleConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct SeverityConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(_ severity: ViolationSeverity)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct SeverityLevelsConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public var shortConsoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public enum StatementModeConfiguration: String {}
-
-public struct StatementConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public init(statementMode: StatementModeConfiguration,
-                severity: SeverityConfiguration)
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct SwitchCaseAlignmentConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct TrailingClosureConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct TrailingClosureConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
 
     public init(onlySingleMutedParameter: Bool = false)
 
     public mutating func apply(configuration: Any) throws
 }
 
-public struct TrailingCommaConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct TrailingClosureRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.TrailingClosureConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct TrailingCommaConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
 
     public init(mandatoryComma: Bool = false)
 
     public mutating func apply(configuration: Any) throws
 }
 
-public struct TrailingWhitespaceConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct TrailingCommaRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.TrailingCommaConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct TrailingNewlineRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.SourceKitFreeRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct TrailingSemicolonRule: SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct TrailingWhitespaceConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
 
     public init(ignoresEmptyLines: Bool, ignoresComments: Bool)
 
     public mutating func apply(configuration: Any) throws
 }
 
-public struct TypeContentsOrderConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct TrailingWhitespaceRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.TrailingWhitespaceConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct TypeBodyLengthRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityLevelsConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct TypeContentsOrderConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
 
     public mutating func apply(configuration: Any) throws
 }
 
-public struct UnusedDeclarationConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct TypeContentsOrderRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule {
+    public var configuration: SwiftLintFramework.TypeContentsOrderConfiguration
 
-    public init(severity: ViolationSeverity, includePublicAndOpen: Bool)
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct TypeNameRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.NameConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct UnavailableFunctionRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct UnneededBreakInSwitchRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct UnneededParenthesesInClosureArgumentRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.CorrectableRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct UnownedVariableCaptureRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct UntypedErrorInCatchRule: SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension UntypedErrorInCatchRule: SwiftLintFramework.CorrectableRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct UnusedCaptureListRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static var description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct UnusedClosureParameterRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct UnusedControlFlowLabelRule: SwiftLintFramework.SubstitutionCorrectableASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+
+    public func violationRanges(in file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [NSRange]
+}
+
+public struct UnusedDeclarationConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
+
+    public init(severity: SwiftLintFramework.ViolationSeverity, includePublicAndOpen: Bool)
 
     public mutating func apply(configuration: Any) throws
 }
 
-public struct UnusedOptionalBindingConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct UnusedDeclarationRule: SwiftLintFramework.AutomaticTestableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AnalyzerRule, SwiftLintFramework.CollectingRule {
+    public struct FileUSRs {}
+
+    public typealias FileInfo = SwiftLintFramework.UnusedDeclarationRule.FileUSRs
+
+    public var configuration: SwiftLintFramework.UnusedDeclarationConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func collectInfo(for file: SourceKittenFramework.File, compilerArguments: [String]) -> SwiftLintFramework.UnusedDeclarationRule.FileUSRs
+
+    public func validate(file: SourceKittenFramework.File, collectedInfo: [SourceKittenFramework.File: SwiftLintFramework.UnusedDeclarationRule.FileUSRs], compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct UnusedEnumeratedRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct UnusedImportRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AnalyzerRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.StyleViolation]
+
+    public func correct(file: SourceKittenFramework.File, compilerArguments: [String]) -> [SwiftLintFramework.Correction]
+}
+
+public struct UnusedOptionalBindingConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
 
     public init(ignoreOptionalTry: Bool)
 
     public mutating func apply(configuration: Any) throws
 }
 
-public struct VerticalWhitespaceConfiguration: RuleConfiguration, Equatable {
-    public var consoleDescription: String
+public struct UnusedOptionalBindingRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.UnusedOptionalBindingConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct UnusedSetterValueRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct ValidIBInspectableRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct Version {
+    public let value: String
+
+    public static let current: SwiftLintFramework.Version
+}
+
+public struct VerticalParameterAlignmentOnCallRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct VerticalParameterAlignmentRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct VerticalWhitespaceBetweenCasesRule: SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+}
+
+extension VerticalWhitespaceBetweenCasesRule: SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension VerticalWhitespaceBetweenCasesRule: SwiftLintFramework.CorrectableRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct VerticalWhitespaceClosingBracesRule: SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+}
+
+extension VerticalWhitespaceClosingBracesRule: SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configurationDescription: String { get }
+
+    public init(configuration: Any) throws
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+}
+
+extension VerticalWhitespaceClosingBracesRule: SwiftLintFramework.CorrectableRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
+}
+
+public struct VerticalWhitespaceConfiguration: SwiftLintFramework.RuleConfiguration, Equatable {
+    public var consoleDescription: String { get }
 
     public init(maxEmptyLines: Int)
 
     public mutating func apply(configuration: Any) throws
 }
 
-public struct AttributesRule: ASTRule, OptInRule, ConfigurationProviderRule {
-    public var configuration = AttributesConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ClosingBraceRule: SubstitutionCorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func violationRanges(in file: File) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct ClosureEndIndentationRule: Rule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ClosureParameterPositionRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ClosureSpacingRule: CorrectableRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct CollectionAlignmentRule: ASTRule, ConfigurationProviderRule, OptInRule {
-    public var configuration = CollectionAlignmentConfiguration()
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ColonRule: CorrectableRule, ConfigurationProviderRule {
-    public var configuration = ColonConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct CommaRule: SubstitutionCorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File) -> [NSRange]
-}
-
-public struct ConditionalReturnsOnNewlineRule: ConfigurationProviderRule, Rule, OptInRule {
-    public var configuration = ConditionalReturnsOnNewlineConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ControlStatementRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct CustomRulesConfiguration: RuleConfiguration, Equatable, CacheDescriptionProvider {
-    public var consoleDescription: String
-
-    public var customRuleConfigurations = [RegexConfiguration]()
-
-    public init()
-
-    public mutating func apply(configuration: Any) throws
-}
-
-public struct CustomRules: Rule, ConfigurationProviderRule, CacheDescriptionProvider {
-    public var configuration = CustomRulesConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct EmptyEnumArgumentsRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File, kind: StatementKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-}
-
-public struct EmptyParametersRule: ConfigurationProviderRule, SubstitutionCorrectableRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func violationRanges(in file: File) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct EmptyParenthesesWithTrailingClosureRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File, kind: SwiftExpressionKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-}
-
-public struct ExplicitSelfRule: CorrectableRule, ConfigurationProviderRule, AnalyzerRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, compilerArguments: [String]) -> [StyleViolation]
-
-    public func correct(file: File, compilerArguments: [String]) -> [Correction]
-}
-
-public struct FileHeaderRule: ConfigurationProviderRule, OptInRule {
-    public var configuration = FileHeaderConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct FileTypesOrderRule: ConfigurationProviderRule, OptInRule {
-    public var configuration = FileTypesOrderConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct IdentifierNameRule: ASTRule, ConfigurationProviderRule {
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ImplicitGetterRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ImplicitReturnRule: ConfigurationProviderRule, SubstitutionCorrectableRule, OptInRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File) -> [NSRange]
-}
-
-public struct LeadingWhitespaceRule: CorrectableRule, ConfigurationProviderRule, SourceKitFreeRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct LetVarWhitespaceRule: ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct LiteralExpressionEndIdentationRule: Rule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct ModifierOrderRule: ASTRule, OptInRule, ConfigurationProviderRule, CorrectableRule {
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct MultilineArgumentsBracketsRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct MultilineArgumentsRule: ASTRule, OptInRule, ConfigurationProviderRule {
-    public var configuration = MultilineArgumentsConfiguration()
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct MultilineFunctionChainsRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct MultilineLiteralBracketsRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct MultilineParametersBracketsRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct MultilineParametersRule: ASTRule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct MultipleClosuresWithTrailingClosureRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct NoSpaceInMethodCallRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File,
-                                kind: SwiftExpressionKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-}
-
-public struct NumberSeparatorRule: OptInRule, CorrectableRule, ConfigurationProviderRule {
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct OpeningBraceRule: CorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct OperatorFunctionWhitespaceRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct OperatorUsageWhitespaceRule: OptInRule, CorrectableRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct PrefixedTopLevelConstantRule: ASTRule, OptInRule, ConfigurationProviderRule {
-    public var configuration = PrefixedConstantRuleConfiguration(onlyPrivateMembers: false)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct ProtocolPropertyAccessorsOrderRule: ConfigurationProviderRule, SubstitutionCorrectableRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func violationRanges(in file: File) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct RedundantDiscardableLetRule: SubstitutionCorrectableRule, ConfigurationProviderRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-
-    public func violationRanges(in file: File) -> [NSRange]
-}
-
-public struct ReturnArrowWhitespaceRule: CorrectableRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct ShorthandOperatorRule: ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.error)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct SingleTestClassRule: Rule, OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct SortedImportsRule: CorrectableRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct StatementPositionRule: CorrectableRule, ConfigurationProviderRule {
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct SwitchCaseAlignmentRule: ASTRule, ConfigurationProviderRule {
-    public var configuration = SwitchCaseAlignmentConfiguration()
-
-    public init()
-
-    public func validate(file: File, kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct SwitchCaseOnNewlineRule: ASTRule, ConfigurationProviderRule, OptInRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct TrailingClosureRule: OptInRule, ConfigurationProviderRule {
-    public var configuration = TrailingClosureConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct TrailingCommaRule: SubstitutionCorrectableASTRule, ConfigurationProviderRule {
-    public var configuration = TrailingCommaConfiguration()
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-
-    public func violationRanges(in file: File, kind: SwiftExpressionKind,
-                                dictionary: [String: SourceKitRepresentable]) -> [NSRange]
-
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
-}
-
-public struct TrailingNewlineRule: CorrectableRule, ConfigurationProviderRule, SourceKitFreeRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct TrailingWhitespaceRule: CorrectableRule, ConfigurationProviderRule {
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct TypeContentsOrderRule: ConfigurationProviderRule, OptInRule {
-    public var configuration = TypeContentsOrderConfiguration()
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-}
-
-public struct UnneededParenthesesInClosureArgumentRule: ConfigurationProviderRule, CorrectableRule, OptInRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct UnusedOptionalBindingRule: ASTRule, ConfigurationProviderRule {
-    public var configuration = UnusedOptionalBindingConfiguration(ignoreOptionalTry: false)
-
-    public init()
-
-    public func validate(file: File,
-                         kind: StatementKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct VerticalParameterAlignmentOnCallRule: ASTRule, ConfigurationProviderRule, OptInRule,
-    AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftExpressionKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct VerticalParameterAlignmentRule: ASTRule, ConfigurationProviderRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
-
-    public func validate(file: File, kind: SwiftDeclarationKind,
-                         dictionary: [String: SourceKitRepresentable]) -> [StyleViolation]
-}
-
-public struct VerticalWhitespaceBetweenCasesRule: ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
+public struct VerticalWhitespaceOpeningBracesRule: SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
 
     public init()
 }
 
-public struct VerticalWhitespaceClosingBracesRule: ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
+extension VerticalWhitespaceOpeningBracesRule: SwiftLintFramework.OptInRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configurationDescription: String { get }
 
-    public init()
+    public init(configuration: Any) throws
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
 }
 
-public struct VerticalWhitespaceOpeningBracesRule: ConfigurationProviderRule {
-    public var configuration = SeverityConfiguration(.warning)
-
-    public init()
+extension VerticalWhitespaceOpeningBracesRule: SwiftLintFramework.CorrectableRule {
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
 }
 
-public struct VerticalWhitespaceRule: CorrectableRule, ConfigurationProviderRule {
-    public var configuration = VerticalWhitespaceConfiguration(maxEmptyLines: 1)
-
-    public init()
-
-    public func validate(file: File) -> [StyleViolation]
-
-    public func correct(file: File) -> [Correction]
-}
-
-public struct VoidReturnRule: ConfigurationProviderRule, SubstitutionCorrectableRule, AutomaticTestableRule {
-    public var configuration = SeverityConfiguration(.warning)
+public struct VerticalWhitespaceRule: SwiftLintFramework.CorrectableRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.VerticalWhitespaceConfiguration
 
     public init()
 
-    public func validate(file: File) -> [StyleViolation]
+    public static let description: SwiftLintFramework.RuleDescription
 
-    public func violationRanges(in file: File) -> [NSRange]
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
 
-    public func substitution(for violationRange: NSRange, in file: File) -> (NSRange, String)
+    public func correct(file: SourceKittenFramework.File) -> [SwiftLintFramework.Correction]
 }
+
+public enum ViolationSeverity: String, Comparable, Codable {
+    case warning
+
+    case error
+
+    /// Returns a Boolean value indicating whether the value of the first
+    /// argument is less than that of the second argument.
+    ///
+    /// This function is the only requirement of the `Comparable` protocol. The
+    /// remainder of the relational operator functions are implemented by the
+    /// standard library for any type that conforms to `Comparable`.
+    ///
+    /// - Parameters:
+    ///   - lhs: A value to compare.
+    ///   - rhs: Another value to compare.
+    public static func < (lhs: SwiftLintFramework.ViolationSeverity, rhs: SwiftLintFramework.ViolationSeverity) -> Bool
+}
+
+public struct VoidReturnRule: SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.SubstitutionCorrectableRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File) -> [SwiftLintFramework.StyleViolation]
+
+    public func violationRanges(in file: SourceKittenFramework.File) -> [NSRange]
+
+    public func substitution(for violationRange: NSRange, in file: SourceKittenFramework.File) -> (NSRange, String)
+}
+
+public struct WeakDelegateRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.SwiftDeclarationKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct XCTFailMessageRule: SwiftLintFramework.ASTRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct XCTSpecificMatcherRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SwiftLintFramework.SwiftExpressionKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public struct XcodeReporter: SwiftLintFramework.Reporter {
+    public static let identifier: String
+
+    public static let isRealtime: Bool
+
+    /// A textual representation of this instance.
+    ///
+    /// Calling this property directly is discouraged. Instead, convert an
+    /// instance of any type to a string by using the `String(describing:)`
+    /// initializer. This initializer works with any type, and uses the custom
+    /// `description` property for types that conform to
+    /// `CustomStringConvertible`:
+    ///
+    ///     struct Point: CustomStringConvertible {
+    ///         let x: Int, y: Int
+    ///
+    ///         var description: String {
+    ///             return "(\(x), \(y))"
+    ///         }
+    ///     }
+    ///
+    ///     let p = Point(x: 21, y: 30)
+    ///     let s = String(describing: p)
+    ///     print(s)
+    ///     // Prints "(21, 30)"
+    ///
+    /// The conversion of `p` to a string in the assignment to `s` uses the
+    /// `Point` type's `description` property.
+    public var description: String { get }
+
+    public static func generateReport(_ violations: [SwiftLintFramework.StyleViolation]) -> String
+}
+
+public struct YamlParser {
+    public static func parse(_ yaml: String, env: [String: String] = ProcessInfo.processInfo.environment) throws -> [String: Any]
+}
+
+public struct YodaConditionRule: SwiftLintFramework.ASTRule, SwiftLintFramework.OptInRule, SwiftLintFramework.ConfigurationProviderRule, SwiftLintFramework.AutomaticTestableRule {
+    public var configuration: SwiftLintFramework.SeverityConfiguration
+
+    public init()
+
+    public static let description: SwiftLintFramework.RuleDescription
+
+    public func validate(file: SourceKittenFramework.File, kind: SourceKittenFramework.StatementKind, dictionary: [String: SourceKittenFramework.SourceKitRepresentable]) -> [SwiftLintFramework.StyleViolation]
+}
+
+public let masterRuleList: SwiftLintFramework.RuleList
+
+/**
+ A thread-safe, newline-terminated version of fatalError that doesn't leak
+ the source path from the compiled binary.
+ */
+public func queuedFatalError(_ string: String, file: StaticString = #file, line: UInt = #line) -> Never
+
+/**
+ A thread-safe version of Swift's standard print().
+
+ - parameter object: Object to print.
+ */
+public func queuedPrint<T>(_ object: T)
+
+/**
+ A thread-safe, newline-terminated version of fputs(..., stderr).
+
+ - parameter string: String to print.
+ */
+public func queuedPrintError(_ string: String)
+
+public func reporterFrom(identifier: String) -> SwiftLintFramework.Reporter.Type
+
+extension File {
+    public func invalidateCache()
+}
+
+extension FileManager: SwiftLintFramework.LintableFileManager {
+    public func filesToLint(inPath path: String, rootDirectory: String? = nil) -> [String]
+
+    public func modificationDate(forFileAtPath path: String) -> Date?
+}
+
+extension NSRegularExpression.Options: Hashable {
+    /// Hashes the essential components of this value by feeding them into the
+    /// given hasher.
+    ///
+    /// Implement this method to conform to the `Hashable` protocol. The
+    /// components used for hashing must be the same as the components compared
+    /// in your type's `==` operator implementation. Call `hasher.combine(_:)`
+    /// with each of these components.
+    ///
+    /// - Important: Never call `finalize()` on `hasher`. Doing so may become a
+    ///   compile-time error in the future.
+    ///
+    /// - Parameter hasher: The hasher to use when combining the components
+    ///   of this instance.
+    public func hash(into hasher: inout Hasher)
+}
+
+extension String {
+    public func absolutePathStandardized() -> String
+}
+
+extension SwiftDeclarationAttributeKind {
+    public enum ModifierGroup: String, CustomDebugStringConvertible {
+        case override
+
+        case acl
+
+        case setterACL
+
+        case owned
+
+        case mutators
+
+        case final
+
+        case typeMethods
+
+        case required
+
+        case convenience
+
+        case lazy
+
+        case dynamic
+
+        case atPrefixed
+
+        /// A textual representation of this instance, suitable for debugging.
+        ///
+        /// Calling this property directly is discouraged. Instead, convert an
+        /// instance of any type to a string by using the `String(reflecting:)`
+        /// initializer. This initializer works with any type, and uses the custom
+        /// `debugDescription` property for types that conform to
+        /// `CustomDebugStringConvertible`:
+        ///
+        ///     struct Point: CustomDebugStringConvertible {
+        ///         let x: Int, y: Int
+        ///
+        ///         var debugDescription: String {
+        ///             return "(\(x), \(y))"
+        ///         }
+        ///     }
+        ///
+        ///     let p = Point(x: 21, y: 30)
+        ///     let s = String(reflecting: p)
+        ///     print(s)
+        ///     // Prints "(21, 30)"
+        ///
+        /// The conversion of `p` to a string in the assignment to `s` uses the
+        /// `Point` type's `debugDescription` property.
+        public var debugDescription: String { get }
+    }
+}
+
+extension Array where Element == SwiftLintFramework.Rule {
+    public static func == (lhs: [Element], rhs: [Element]) -> Bool
+}
+
+extension SyntaxKind {
+    /// Returns if the syntax kind is comment-like.
+    public var isCommentLike: Bool { get }
+}
+
+public var masterRuleList: SwiftLintFramework.RuleList
