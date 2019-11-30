@@ -16,7 +16,7 @@ class VersionCommandTests: XCTestCase {
         }
         let outputData = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(decoding: outputData, as: UTF8.self).trimmingCharacters(in: .newlines)
-        XCTAssertEqual(output, "ModuleInterface v0.0.1")
+        XCTAssertEqual(output, "ModuleInterface v0.0.3")
     }
 
 }

@@ -29,7 +29,7 @@ struct ModuleInterface {
         }
     }
 
-    static let version: String = "0.0.1"
+    static let version: String = "0.0.3"
     static let defaultOutputPath = "Documentation"
 
     func run() {
