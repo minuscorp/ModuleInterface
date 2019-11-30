@@ -97,7 +97,8 @@ Swift 5.1 runtime and Xcode installed in your computer.
 
 ### Using Homebrew
 
-**Soon**
+`brew tap minuscorp/moduleinterface`
+`brew install moduleinterface`
 
 ### Building with Swift Package Manager
 
