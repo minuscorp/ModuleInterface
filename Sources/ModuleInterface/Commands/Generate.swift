@@ -114,17 +114,24 @@ struct GenerateCommand: CommandProtocol {
         return try interfaceForModule(module.name, compilerArguments: module.compilerArguments)
     }
 
+    fileprivate func documentate(_ sourcetext: String, module: String, options: GenerateCommandOptions) throws {
+        let output = sourcetext
+        try createDirectory(path: options.outputFolder)
+        try write(to: options.outputFolder, module: module, documentation: output)
+    }
+
     private func generateDocumentation(docs: [String: SourceKitRepresentable], options: GenerateCommandOptions, module: String) throws {
         if options.clean {
             try CleanCommand.removeModuleInterface(path: options.outputFolder, module: module)
         }
-        guard let sourcetext = docs["key.sourcetext"] as? String else {
+        if let sourcetext = docs["key.sourcetext"] as? String {
+            try documentate(sourcetext, module: module, options: options)
+        } else if let dictionary = docs["key.annotations"] as? SwiftDoc, let sourcetext = process(dictionary: dictionary, options: options) {
+            try documentate(sourcetext, module: module, options: options)
+        } else {
             let message = "Unable to parse module named \(module)"
             throw ModuleInterface.Error.default(message)
         }
-        let output = sourcetext
-        try createDirectory(path: options.outputFolder)
-        try write(to: options.outputFolder, module: module, documentation: output)
     }
 
     private func write(to path: String, module: String, documentation: String) throws {
