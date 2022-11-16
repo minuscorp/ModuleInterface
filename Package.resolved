@@ -56,6 +56,15 @@
         }
       },
       {
+        "package": "ProcessRunner",
+        "repositoryURL": "https://github.com/eneko/ProcessRunner.git",
+        "state": {
+          "branch": null,
+          "revision": "bedc55797b206bff50f652ffad8269223320fee5",
+          "version": "1.1.0"
+        }
+      },
+      {
         "package": "Quick",
         "repositoryURL": "https://github.com/Quick/Quick.git",
         "state": {
@@ -78,8 +87,8 @@
         "repositoryURL": "https://github.com/eneko/SourceDocs.git",
         "state": {
           "branch": null,
-          "revision": "dfa6fdae84c555264ad9795dcb7d629339191c01",
-          "version": "0.6.1"
+          "revision": "fb0e489e3a26c789aad3adbe43e2169f50f485e8",
+          "version": "2.0.1"
         }
       },
       {
@@ -101,24 +110,6 @@
         }
       },
       {
-        "package": "llbuild",
-        "repositoryURL": "https://github.com/apple/swift-llbuild.git",
-        "state": {
-          "branch": null,
-          "revision": "f1c9ad9a253cdf1aa89a7f5c99c30b4513b06ddb",
-          "version": "0.1.1"
-        }
-      },
-      {
-        "package": "SwiftPM",
-        "repositoryURL": "https://github.com/apple/swift-package-manager.git",
-        "state": {
-          "branch": null,
-          "revision": "8656a25cb906c1896339f950ac960ee1b4fe8034",
-          "version": "0.4.0"
-        }
-      },
-      {
         "package": "SwiftFormat",
         "repositoryURL": "https://github.com/nicklockwood/SwiftFormat",
         "state": {
@@ -134,15 +125,6 @@
           "branch": null,
           "revision": "6469881a3f30417c5bb02404ea4b69207f297592",
           "version": "6.0.0"
-        }
-      },
-      {
-        "package": "System",
-        "repositoryURL": "https://github.com/eneko/System.git",
-        "state": {
-          "branch": null,
-          "revision": "381352d9479fb9c75d99a5ae5503f7d560c62449",
-          "version": "0.2.0"
         }
       },
       {
