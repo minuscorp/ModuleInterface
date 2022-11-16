@@ -10,7 +10,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/jpsim/SourceKitten.git", .exact("0.30.1")),
+        .package(url: "https://github.com/jpsim/SourceKitten.git", .exact("0.31.0")),
         .package(url: "https://github.com/Carthage/Commandant.git", from: "0.15.0"),
         .package(url: "https://github.com/onevcat/Rainbow", from: "3.0.0"),
         .package(url: "https://github.com/eneko/SourceDocs.git", from: "0.2.0"),
