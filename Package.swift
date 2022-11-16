@@ -11,11 +11,11 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/jpsim/SourceKitten.git", .exact("0.32.0")),
-        .package(url: "https://github.com/Carthage/Commandant.git", from: "0.15.0"),
-        .package(url: "https://github.com/onevcat/Rainbow", from: "3.0.0"),
-        .package(url: "https://github.com/eneko/SourceDocs.git", from: "0.2.0"),
-        .package(url: "https://github.com/thoughtbot/Curry.git", from: "4.0.1"),
-        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.35.8"),
+        .package(url: "https://github.com/Carthage/Commandant.git", .exact("0.17.0")),
+        .package(url: "https://github.com/onevcat/Rainbow", .exact("3.1.5")),
+        .package(url: "https://github.com/eneko/SourceDocs.git", .exact("0.6.1")),
+        .package(url: "https://github.com/thoughtbot/Curry.git", .exact("4.0.2")),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", .exact("0.40.14")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
