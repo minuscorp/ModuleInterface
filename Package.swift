@@ -12,7 +12,7 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/jpsim/SourceKitten.git", .exact("0.32.0")),
         .package(url: "https://github.com/Carthage/Commandant.git", .exact("0.18.0")),
-        .package(url: "https://github.com/onevcat/Rainbow", .exact("3.1.5")),
+        .package(url: "https://github.com/onevcat/Rainbow", .exact("3.2.0")),
         .package(url: "https://github.com/eneko/SourceDocs.git", .exact("2.0.1")),
         .package(url: "https://github.com/thoughtbot/Curry.git", .exact("4.0.2")),
         .package(url: "https://github.com/nicklockwood/SwiftFormat", .exact("0.50.3")),
