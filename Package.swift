@@ -15,7 +15,7 @@ let package = Package(
         .package(url: "https://github.com/onevcat/Rainbow", .exact("3.1.5")),
         .package(url: "https://github.com/eneko/SourceDocs.git", .exact("0.6.1")),
         .package(url: "https://github.com/thoughtbot/Curry.git", .exact("4.0.2")),
-        .package(url: "https://github.com/nicklockwood/SwiftFormat", .exact("0.40.14")),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", .exact("0.50.3")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
